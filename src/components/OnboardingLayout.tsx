@@ -20,6 +20,7 @@ interface OnboardingLayoutProps {
   totalSteps: number;
   footer?: React.ReactNode;
   onBack?: () => void;
+  showBackButton?: boolean;
 }
 
 export function OnboardingLayout({

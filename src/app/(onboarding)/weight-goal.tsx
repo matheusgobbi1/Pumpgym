@@ -9,8 +9,8 @@ import { useState } from "react";
 import { ErrorMessage } from "../../components/ErrorMessage";
 import { MaterialCommunityIcons } from "@expo/vector-icons";
 
-const TOTAL_STEPS = 10;
-const CURRENT_STEP = 7;
+const TOTAL_STEPS = 14;
+const CURRENT_STEP = 10;
 
 export default function WeightGoalScreen() {
   const router = useRouter();

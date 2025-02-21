@@ -7,8 +7,8 @@ import { useColors } from "../../constants/colors";
 import { useOnboarding } from "../../contexts/OnboardingContext";
 import { MaterialCommunityIcons } from "@expo/vector-icons";
 
-const TOTAL_STEPS = 10;
-const CURRENT_STEP = 2;
+const CURRENT_STEP = 6;
+const TOTAL_STEPS = 14;
 
 const TRAINING_OPTIONS = [
   {
@@ -48,10 +48,17 @@ export default function TrainingFrequencyScreen() {
   const { data, dispatch } = useOnboarding();
   const colors = useColors();
 
+  const handleSelect = (
+    frequency: (typeof TRAINING_OPTIONS)[number]["value"]
+  ) => {
+    dispatch({
+      type: "SET_TRAINING_FREQUENCY",
+      payload: frequency,
+    });
+  };
+
   const handleNext = () => {
-    if (data.trainingFrequency) {
-      router.push("/referral");
-    }
+    router.push("/training-days");
   };
 
   return (
@@ -65,6 +72,7 @@ export default function TrainingFrequencyScreen() {
           disabled={!data.trainingFrequency}
         />
       }
+      showBackButton
     >
       <Text style={[styles.title, { color: colors.text }]}>
         Qual seu nível de{"\n"}atividade física?
@@ -87,12 +95,7 @@ export default function TrainingFrequencyScreen() {
                 color={colors.text}
               />
             }
-            onPress={() =>
-              dispatch({
-                type: "SET_TRAINING_FREQUENCY",
-                payload: option.value,
-              })
-            }
+            onPress={() => handleSelect(option.value)}
           />
         ))}
       </View>

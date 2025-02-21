@@ -7,8 +7,8 @@ import { useColors } from "../../constants/colors";
 import { useOnboarding } from "../../contexts/OnboardingContext";
 import { MaterialCommunityIcons } from "@expo/vector-icons";
 
-const TOTAL_STEPS = 10;
-const CURRENT_STEP = 9;
+const CURRENT_STEP = 12;
+const TOTAL_STEPS = 14;
 
 const DIET_OPTIONS = [
   {
@@ -42,10 +42,15 @@ export default function DietScreen() {
   const { data, dispatch } = useOnboarding();
   const colors = useColors();
 
+  const handleSelect = (diet: typeof DIET_OPTIONS[number]["id"]) => {
+    dispatch({
+      type: "SET_DIET",
+      payload: diet,
+    });
+  };
+
   const handleNext = () => {
-    if (data.diet) {
-      router.push("/summary");
-    }
+    router.push("/referral");
   };
 
   return (
@@ -53,8 +58,13 @@ export default function DietScreen() {
       currentStep={CURRENT_STEP}
       totalSteps={TOTAL_STEPS}
       footer={
-        <Button label="Próximo" onPress={handleNext} disabled={!data.diet} />
+        <Button 
+          label="Próximo" 
+          onPress={handleNext}
+          disabled={!data.diet} 
+        />
       }
+      showBackButton
     >
       <View style={styles.header}>
         <Text style={[styles.title, { color: colors.text }]}>
@@ -72,12 +82,7 @@ export default function DietScreen() {
             title={option.title}
             subtitle={option.subtitle}
             selected={data.diet === option.id}
-            onPress={() =>
-              dispatch({
-                type: "SET_DIET",
-                payload: option.id,
-              })
-            }
+            onPress={() => handleSelect(option.id)}
             leftContent={
               <View
                 style={[

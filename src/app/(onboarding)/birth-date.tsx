@@ -15,8 +15,8 @@ import { useState } from "react";
 import { validateUserData } from "../../services/validation";
 import { ErrorMessage } from "../../components/ErrorMessage";
 
-const TOTAL_STEPS = 10;
-const CURRENT_STEP = 4;
+const CURRENT_STEP = 7;
+const TOTAL_STEPS = 14;
 
 const MONTHS = [
   "Janeiro",
@@ -48,14 +48,14 @@ export default function BirthDateScreen() {
   const [selectedYear, setSelectedYear] = useState<number | null>(null);
   const [error, setError] = useState<string | null>(null);
 
-  const handleNext = () => {
-    if (
-      selectedMonth !== null &&
-      selectedDay !== null &&
-      selectedYear !== null
-    ) {
-      const birthDate = new Date(selectedYear, selectedMonth, selectedDay);
+  const isValid = 
+    selectedMonth !== null && 
+    selectedDay !== null && 
+    selectedYear !== null;
 
+  const handleNext = () => {
+    if (isValid) {
+      const birthDate = new Date(selectedYear, selectedMonth, selectedDay);
       const errors = validateUserData({ ...data, birthDate });
       const birthDateError = errors.find((e) => e.field === "birthDate");
 
@@ -73,16 +73,18 @@ export default function BirthDateScreen() {
     }
   };
 
-  const isDateValid =
-    selectedMonth !== null && selectedDay !== null && selectedYear !== null;
-
   return (
     <OnboardingLayout
       currentStep={CURRENT_STEP}
       totalSteps={TOTAL_STEPS}
       footer={
-        <Button label="Próximo" onPress={handleNext} disabled={!isDateValid} />
+        <Button 
+          label="Próximo" 
+          onPress={handleNext} 
+          disabled={!isValid} 
+        />
       }
+      showBackButton
     >
       <Text style={[styles.title, { color: colors.text }]}>
         Quando você{"\n"}nasceu?

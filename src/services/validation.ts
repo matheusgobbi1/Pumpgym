@@ -128,6 +128,34 @@ export function validateUserData(data: OnboardingData): ValidationError[] {
     });
   }
 
+  if (!data.trainingExperience) {
+    errors.push({
+      field: "trainingExperience",
+      message: "Selecione sua experiência com treino",
+    });
+  }
+
+  if (data.trainingExperience !== "none" && !data.trainingStyle) {
+    errors.push({
+      field: "trainingStyle",
+      message: "Selecione seu estilo de treino",
+    });
+  }
+
+  if (!data.trainingTime) {
+    errors.push({
+      field: "trainingTime",
+      message: "Selecione o tempo disponível para treino",
+    });
+  }
+
+  if (!data.trainingGoals) {
+    errors.push({
+      field: "trainingGoals",
+      message: "Selecione seu objetivo principal",
+    });
+  }
+
   if (errors.length > 0) {
     console.warn("⚠️ Erros encontrados na validação:", errors);
   } else {
@@ -145,4 +173,11 @@ function calculateAge(birthDate: Date): number {
     age--;
   }
   return age;
+}
+
+export function validateWorkout(workout: WorkoutDay): ValidationResult {
+  // Verificar tempo total
+  // Balancear grupos musculares
+  // Verificar volume adequado
+  // Ajustar baseado em limitações
 }

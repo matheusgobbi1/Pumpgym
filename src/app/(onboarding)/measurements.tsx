@@ -11,8 +11,8 @@ import { useState } from "react";
 import { validateUserData } from "../../services/validation";
 import { ErrorMessage } from "../../components/ErrorMessage";
 
-const TOTAL_STEPS = 10;
-const CURRENT_STEP = 5;
+const CURRENT_STEP = 8;
+const TOTAL_STEPS = 14;
 
 export default function MeasurementsScreen() {
   const router = useRouter();

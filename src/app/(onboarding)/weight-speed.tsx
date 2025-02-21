@@ -13,8 +13,8 @@ import { useState, useEffect } from "react";
 import { validateUserData } from "../../services/validation";
 import { MaterialCommunityIcons } from "@expo/vector-icons";
 
-const TOTAL_STEPS = 10;
-const CURRENT_STEP = 8;
+const CURRENT_STEP = 11;
+const TOTAL_STEPS = 14;
 
 const GOAL_LABELS = {
   lose: "perder",

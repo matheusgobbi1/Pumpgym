@@ -7,8 +7,8 @@ import { OnboardingLayout } from "../../components/OnboardingLayout";
 import { useColors } from "../../constants/colors";
 import { useOnboarding } from "../../contexts/OnboardingContext";
 
-const TOTAL_STEPS = 10;
-const CURRENT_STEP = 3;
+const TOTAL_STEPS = 14;
+const CURRENT_STEP = 13;
 
 const REFERRAL_OPTIONS = [
   {
@@ -60,10 +60,15 @@ export default function ReferralScreen() {
   const { data, dispatch } = useOnboarding();
   const colors = useColors();
 
+  const handleSelect = (source: typeof REFERRAL_OPTIONS[number]["id"]) => {
+    dispatch({
+      type: "SET_REFERRAL_SOURCE",
+      payload: source,
+    });
+  };
+
   const handleNext = () => {
-    if (data.referralSource) {
-      router.push("/birth-date");
-    }
+    router.push("/summary");
   };
 
   return (
@@ -71,12 +76,13 @@ export default function ReferralScreen() {
       currentStep={CURRENT_STEP}
       totalSteps={TOTAL_STEPS}
       footer={
-        <Button
-          label="Próximo"
+        <Button 
+          label="Próximo" 
           onPress={handleNext}
-          disabled={!data.referralSource}
+          disabled={!data.referralSource} 
         />
       }
+      showBackButton
     >
       <Text style={[styles.title, { color: colors.text }]}>
         Onde você ouviu{"\n"}falar de nós?
@@ -88,12 +94,7 @@ export default function ReferralScreen() {
             key={option.id}
             title={option.title}
             selected={data.referralSource === option.id}
-            onPress={() =>
-              dispatch({
-                type: "SET_REFERRAL_SOURCE",
-                payload: option.id,
-              })
-            }
+            onPress={() => handleSelect(option.id)}
             leftContent={option.icon(
               data.referralSource === option.id ? colors.primary : colors.text
             )}

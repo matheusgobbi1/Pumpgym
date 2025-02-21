@@ -11,6 +11,33 @@ export type MacroDistribution =
   | "lower" // Lower Carb (40/40/20)
   | "higher"; // Higher Carb (30/20/50)
 
+export type TrainingExperience =
+  | "beginner" // Iniciante
+  | "intermediate" // 6 meses - 2 anos
+  | "advanced" // 2+ anos
+  | "none"; // Nunca treinou
+
+export type TrainingStyle =
+  | "full_body"
+  | "upper_lower"
+  | "push_pull_legs"
+  | "other"
+  | "none";
+
+export type TrainingTime =
+  | "30_min"
+  | "45_min"
+  | "60_min"
+  | "90_min"
+  | "120_min";
+
+export type TrainingGoals =
+  | "strength"
+  | "hypertrophy"
+  | "endurance"
+  | "weight_loss"
+  | "general_fitness";
+
 export type OnboardingData = {
   gender?: "masculino" | "feminino" | "outro";
   birthDate?: Date;
@@ -34,6 +61,11 @@ export type OnboardingData = {
     | "google"
     | "tv";
   macroDistribution?: MacroDistribution;
+  trainingExperience?: TrainingExperience;
+  trainingStyle?: TrainingStyle;
+  trainingTime?: TrainingTime;
+  trainingGoals?: TrainingGoals;
+  trainingDays?: number[]; // 0 = domingo, 1 = segunda, etc
 };
 
 type ReferralSource =
@@ -59,7 +91,12 @@ type OnboardingAction =
   | { type: "SET_DIET"; payload: OnboardingData["diet"] }
   | { type: "SET_REFERRAL_SOURCE"; payload: OnboardingData["referralSource"] }
   | { type: "RESET" }
-  | { type: "SET_MACRO_DISTRIBUTION"; payload: MacroDistribution };
+  | { type: "SET_MACRO_DISTRIBUTION"; payload: MacroDistribution }
+  | { type: "SET_TRAINING_EXPERIENCE"; payload: TrainingExperience }
+  | { type: "SET_TRAINING_STYLE"; payload: TrainingStyle }
+  | { type: "SET_TRAINING_TIME"; payload: TrainingTime }
+  | { type: "SET_TRAINING_GOALS"; payload: TrainingGoals }
+  | { type: "SET_TRAINING_DAYS"; payload: number[] };
 
 type OnboardingContextType = {
   data: OnboardingData;
@@ -109,6 +146,16 @@ function onboardingReducer(
       return initialState;
     case "SET_MACRO_DISTRIBUTION":
       return { ...state, macroDistribution: action.payload };
+    case "SET_TRAINING_EXPERIENCE":
+      return { ...state, trainingExperience: action.payload };
+    case "SET_TRAINING_STYLE":
+      return { ...state, trainingStyle: action.payload };
+    case "SET_TRAINING_TIME":
+      return { ...state, trainingTime: action.payload };
+    case "SET_TRAINING_GOALS":
+      return { ...state, trainingGoals: action.payload };
+    case "SET_TRAINING_DAYS":
+      return { ...state, trainingDays: action.payload };
     default:
       return state;
   }

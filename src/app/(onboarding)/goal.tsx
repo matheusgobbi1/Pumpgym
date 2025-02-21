@@ -7,8 +7,8 @@ import { useColors } from "../../constants/colors";
 import { useOnboarding } from "../../contexts/OnboardingContext";
 import { MaterialCommunityIcons } from "@expo/vector-icons";
 
-const TOTAL_STEPS = 10;
-const CURRENT_STEP = 6;
+const CURRENT_STEP = 9;
+const TOTAL_STEPS = 14;
 
 const GOAL_OPTIONS = [
   {
@@ -36,10 +36,15 @@ export default function GoalScreen() {
   const { data, dispatch } = useOnboarding();
   const colors = useColors();
 
+  const handleSelect = (goal: typeof GOAL_OPTIONS[number]["id"]) => {
+    dispatch({
+      type: "SET_GOAL",
+      payload: goal,
+    });
+  };
+
   const handleNext = () => {
-    if (data.goal) {
-      router.push("/weight-goal");
-    }
+    router.push("/weight-goal");
   };
 
   return (
@@ -47,8 +52,13 @@ export default function GoalScreen() {
       currentStep={CURRENT_STEP}
       totalSteps={TOTAL_STEPS}
       footer={
-        <Button label="Próximo" onPress={handleNext} disabled={!data.goal} />
+        <Button 
+          label="Próximo" 
+          onPress={handleNext}
+          disabled={!data.goal} 
+        />
       }
+      showBackButton
     >
       <Text style={[styles.title, { color: colors.text }]}>
         Qual seu objetivo{"\n"}principal?
@@ -64,12 +74,7 @@ export default function GoalScreen() {
             title={option.title}
             subtitle={option.subtitle}
             selected={data.goal === option.id}
-            onPress={() =>
-              dispatch({
-                type: "SET_GOAL",
-                payload: option.id,
-              })
-            }
+            onPress={() => handleSelect(option.id)}
             leftContent={
               <View
                 style={[

@@ -19,8 +19,8 @@ import { format } from "date-fns";
 import React from "react";
 import { MacroDistributionSelector } from "../../components/MacroDistributionSelector";
 
-const TOTAL_STEPS = 10;
-const CURRENT_STEP = 10;
+const CURRENT_STEP = 14;
+const TOTAL_STEPS = 14;
 
 export default function SummaryScreen() {
   const router = useRouter();

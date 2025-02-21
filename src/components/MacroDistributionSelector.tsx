@@ -21,11 +21,6 @@ const MACRO_DISTRIBUTIONS = {
     carbs: 35,
     icon: "chart-pie",
     color: "#FF5A00",
-    benefits: [
-      "Energia sustentável",
-      "Recuperação muscular",
-      "Fácil adaptação",
-    ],
   },
   lower: {
     label: "Lower Carb",
@@ -35,7 +30,6 @@ const MACRO_DISTRIBUTIONS = {
     carbs: 20,
     icon: "chart-donut",
     color: "#4CAF50",
-    benefits: ["Controle de fome", "Queima de gordura", "Energia estável"],
   },
   higher: {
     label: "Higher Carb",
@@ -45,11 +39,6 @@ const MACRO_DISTRIBUTIONS = {
     carbs: 50,
     icon: "chart-arc",
     color: "#2196F3",
-    benefits: [
-      "Energia explosiva",
-      "Glicogênio muscular",
-      "Recuperação rápida",
-    ],
   },
 } as const;
 
@@ -168,32 +157,6 @@ export function MacroDistributionSelector() {
                     icon="oil"
                   />
                 </View>
-
-                <AnimatePresence>
-                  {isSelected && (
-                    <MotiView
-                      from={{ opacity: 0, translateY: 10 }}
-                      animate={{ opacity: 1, translateY: 0 }}
-                      exit={{ opacity: 0, translateY: 10 }}
-                      style={styles.benefitsContainer}
-                    >
-                      {config.benefits.map((benefit, index) => (
-                        <View key={index} style={styles.benefitItem}>
-                          <MaterialCommunityIcons
-                            name="check-circle"
-                            size={16}
-                            color={config.color}
-                          />
-                          <Text
-                            style={[styles.benefitText, { color: colors.text }]}
-                          >
-                            {benefit}
-                          </Text>
-                        </View>
-                      ))}
-                    </MotiView>
-                  )}
-                </AnimatePresence>
               </Pressable>
             </MotiView>
           );

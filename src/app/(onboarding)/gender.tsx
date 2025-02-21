@@ -5,8 +5,9 @@ import { SelectionCard } from "../../components/SelectionCard";
 import { OnboardingLayout } from "../../components/OnboardingLayout";
 import { useOnboarding } from "../../contexts/OnboardingContext";
 import { useColors } from "../../constants/colors";
+import { OnboardingData } from "../../contexts/OnboardingContext";
 
-const TOTAL_STEPS = 10;
+const TOTAL_STEPS = 14;
 const CURRENT_STEP = 1;
 
 const GENDER_OPTIONS = [
@@ -26,13 +27,18 @@ const GENDER_OPTIONS = [
 
 export default function GenderScreen() {
   const router = useRouter();
-  const { data, dispatch } = useOnboarding();
   const colors = useColors();
+  const { data, dispatch } = useOnboarding();
+
+  const handleSelect = (gender: OnboardingData["gender"]) => {
+    dispatch({
+      type: "SET_GENDER",
+      payload: gender,
+    });
+  };
 
   const handleNext = () => {
-    if (data.gender) {
-      router.push("/training-frequency");
-    }
+    router.push("/training-experience");
   };
 
   const handleBack = () => {
@@ -58,7 +64,11 @@ export default function GenderScreen() {
       currentStep={CURRENT_STEP}
       totalSteps={TOTAL_STEPS}
       footer={
-        <Button label="Próximo" onPress={handleNext} disabled={!data.gender} />
+        <Button 
+          label="Próximo" 
+          onPress={handleNext}
+          disabled={!data.gender} 
+        />
       }
       onBack={handleBack}
     >
@@ -75,12 +85,7 @@ export default function GenderScreen() {
             key={option.id}
             title={option.title}
             selected={data.gender === option.id}
-            onPress={() =>
-              dispatch({
-                type: "SET_GENDER",
-                payload: option.id,
-              })
-            }
+            onPress={() => handleSelect(option.id)}
           />
         ))}
       </View>

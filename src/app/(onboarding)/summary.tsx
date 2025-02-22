@@ -18,6 +18,8 @@ import { LoadingSteps } from "../../components/LoadingSteps";
 import { format } from "date-fns";
 import React from "react";
 import { MacroDistributionSelector } from "../../components/MacroDistributionSelector";
+import { saveTrainingProgram } from "../../services/training";
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
 const CURRENT_STEP = 14;
 const TOTAL_STEPS = 14;
@@ -98,18 +100,29 @@ export default function SummaryScreen() {
         console.log("Dados do Onboarding:", JSON.stringify(data, null, 2));
 
         console.log("Salvando perfil do usuário...");
-        await saveUserProfile(user.uid, data);
+        await saveUserProfile(user.uid, {
+          ...data,
+          hasCompletedOnboarding: true,
+        });
         console.log("✅ Perfil salvo com sucesso!");
 
         console.log("Criando plano nutricional...");
         await createUserNutritionPlan(user.uid, data);
         console.log("✅ Plano nutricional criado!");
 
+        console.log("Criando programa de treino...");
+        await saveTrainingProgram(user.uid, data);
+        console.log("✅ Programa de treino criado!");
+
+        // Marcar onboarding como completo
+        await AsyncStorage.setItem(`@onboarding_completed_${user.uid}`, 'true');
+
         console.log("=== SALVAMENTO CONCLUÍDO ===");
+        
+        router.replace("/(tabs)/home");
       } else {
         console.error("❌ Erro: Usuário não encontrado");
       }
-      router.push("/(tabs)");
     } catch (error) {
       console.error("❌ Erro durante o salvamento:", error);
       Alert.alert(

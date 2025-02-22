@@ -1,6 +1,5 @@
 import { TrainingExperience, TrainingGoals } from "../contexts/OnboardingContext";
-import { EXPERIENCE_CONFIG, GOALS_CONFIG } from "../services/training";
-import { Exercise } from "../services/training";
+import { EXPERIENCE_CONFIG, GOALS_CONFIG, Exercise } from "../services/training";
 
 export type VolumeDistribution = "ascending" | "balanced" | "descending";
 export type ExerciseEquipment = "bodyweight" | "dumbbell" | "barbell" | "machine" | "cable";
@@ -70,4 +69,7 @@ export type WorkoutError = {
   code: 'VOLUME_HIGH' | 'RECOVERY_LOW' | 'TIME_INVALID' | 'EXERCISE_DISTRIBUTION';
   message: string;
   details?: Record<string, any>;
-}; 
+};
+
+export type ExperienceConfig = typeof EXPERIENCE_CONFIG;
+export type GoalsConfig = typeof GOALS_CONFIG; 

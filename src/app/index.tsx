@@ -2,37 +2,36 @@ import { View, Text, StyleSheet, ActivityIndicator } from "react-native";
 import { useRouter } from "expo-router";
 import { Button } from "../components/Button";
 import { colors } from "../constants/colors";
-import { auth } from "../services/firebase";
-import { signInAnonymously } from "firebase/auth";
 import { useAuth } from "../contexts/AuthContext";
-import { useEffect, useState } from "react";
+import { useEffect } from "react";
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
-export default function LoginScreen() {
+export default function SplashScreen() {
   const router = useRouter();
-  const { user, isLoading: authLoading } = useAuth();
-  const [isLoading, setIsLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
+  const { user, isLoading } = useAuth();
 
   useEffect(() => {
-    if (user) {
-      router.replace("/gender");
-    }
-  }, [user]);
+    const checkAuthAndOnboarding = async () => {
+      if (user) {
+        try {
+          const hasCompletedOnboarding = await AsyncStorage.getItem(`@onboarding_completed_${user.uid}`);
+          if (hasCompletedOnboarding === 'true') {
+            router.replace("/(tabs)/home");
+          } else {
+            router.replace("/(onboarding)/gender");
+          }
+        } catch (error) {
+          console.error('Erro ao verificar status do onboarding:', error);
+        }
+      }
+    };
 
-  const handleLogin = async () => {
-    try {
-      setIsLoading(true);
-      setError(null);
-      await signInAnonymously(auth);
-    } catch (error) {
-      console.error("Erro ao fazer login:", error);
-      setError("Não foi possível iniciar. Tente novamente.");
-    } finally {
-      setIsLoading(false);
+    if (!isLoading) {
+      checkAuthAndOnboarding();
     }
-  };
+  }, [user, isLoading]);
 
-  if (authLoading) {
+  if (isLoading) {
     return (
       <View style={styles.container}>
         <ActivityIndicator size="large" color={colors.primary} />
@@ -46,11 +45,16 @@ export default function LoginScreen() {
       <Text style={styles.subtitle}>
         Sua jornada para uma vida mais saudável começa aqui
       </Text>
-      {error && <Text style={styles.error}>{error}</Text>}
+      
       <Button
-        label={isLoading ? "Carregando..." : "Começar"}
-        onPress={handleLogin}
-        disabled={isLoading}
+        label="Criar conta"
+        onPress={() => router.push("/(auth)/register")}
+      />
+      
+      <Button
+        label="Já tenho conta"
+        variant="secondary"
+        onPress={() => router.push("/(auth)/login")}
       />
     </View>
   );
@@ -74,10 +78,5 @@ const styles = StyleSheet.create({
     color: colors.textSecondary,
     textAlign: "center",
     marginBottom: 48,
-  },
-  error: {
-    color: colors.error,
-    marginBottom: 16,
-    textAlign: "center",
   },
 });

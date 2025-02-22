@@ -31,8 +31,45 @@ import { validateWorkoutParams } from "../utils/validation";
 import { logWorkoutGeneration } from "../utils/logger";
 import { exerciseCache } from "./exerciseCache";
 import { TRAINING_CONSTANTS } from "../constants/training";
-import { calculateWorkoutVolume } from "../utils/workoutCalculations";
 import { adjustWorkoutBasedOnErrors } from "../utils/workoutAdjustments";
+import { doc, setDoc, getDoc, updateDoc } from "firebase/firestore";
+import { db } from "./firebase";
+
+export const EXPERIENCE_CONFIG = {
+  beginner: {
+    label: "Iniciante",
+    description: "Nunca treinou ou treina há menos de 6 meses",
+    icon: "🌱"
+  },
+  intermediate: {
+    label: "Intermediário",
+    description: "Treina regularmente há mais de 6 meses",
+    icon: "💪"
+  },
+  advanced: {
+    label: "Avançado",
+    description: "Treina há mais de 2 anos com consistência",
+    icon: "🏆"
+  }
+} as const;
+
+export const GOALS_CONFIG = {
+  hypertrophy: {
+    label: "Hipertrofia",
+    description: "Ganho de massa muscular",
+    icon: "💪"
+  },
+  strength: {
+    label: "Força",
+    description: "Aumento de força máxima",
+    icon: "🏋️"
+  },
+  endurance: {
+    label: "Resistência",
+    description: "Melhora da resistência muscular",
+    icon: "🏃"
+  }
+} as const;
 
 export type Exercise = {
   id: string;
@@ -65,9 +102,9 @@ export type TrainingProgram = {
 };
 
 // Configurações mais detalhadas por nível de experiência
-const EXPERIENCE_CONFIG = {
+const EXPERIENCE_CONFIG_DETAILS = {
   none: {
-    setsPerExercise: 2,
+    setsPerExercise: 3,
     exercisesPerMuscle: 1,
     restTime: 90,
     reps: "12-15",
@@ -101,7 +138,7 @@ const EXPERIENCE_CONFIG = {
 };
 
 // Configurações específicas por objetivo
-const GOALS_CONFIG: Record<
+const GOALS_CONFIG_DETAILS: Record<
   TrainingGoals,
   {
     setsMultiplier: number;
@@ -207,22 +244,41 @@ function optimizeExerciseOrder(exercises: Exercise[]): Exercise[] {
   });
 }
 
-// Atualizar a função que gera os treinos para usar a ordem otimizada
+function calculateWorkoutVolume(workout: WorkoutDay): number {
+  if (!workout.exercises || workout.exercises.length === 0) return 0;
+  
+  return workout.exercises.reduce((total, exercise) => {
+    const repsRange = exercise.reps.split("-").map(Number);
+    const avgReps = (repsRange[0] + repsRange[1]) / 2;
+    return total + (exercise.sets * avgReps);
+  }, 0);
+}
+
 function generateWorkoutDay(
   exercises: Exercise[],
   name: string,
   focusArea: string
 ): WorkoutDay {
-  // Validar limites
+  if (!exercises || exercises.length === 0) {
+    return {
+      id: generateUniqueId(),
+      name,
+      exercises: [],
+      estimatedTime: 0,
+      focusArea,
+    };
+  }
+
+  // Validar limites e garantir mínimo de séries
   exercises = exercises.map((exercise) => ({
     ...exercise,
-    sets: Math.min(
-      Math.max(exercise.sets, TRAINING_CONSTANTS.MIN_SETS),
-      TRAINING_CONSTANTS.MAX_SETS
+    sets: Math.max(
+      TRAINING_CONSTANTS.MIN_SETS,
+      Math.min(exercise.sets, TRAINING_CONSTANTS.MAX_SETS)
     ),
-    restTime: Math.min(
-      Math.max(exercise.restTime, TRAINING_CONSTANTS.MIN_REST),
-      TRAINING_CONSTANTS.MAX_REST
+    restTime: Math.max(
+      TRAINING_CONSTANTS.MIN_REST,
+      Math.min(exercise.restTime, TRAINING_CONSTANTS.MAX_REST)
     ),
   }));
 
@@ -234,8 +290,29 @@ function generateWorkoutDay(
     focusArea,
   };
 
-  logWorkoutGeneration(workout);
+  // Log mais detalhado do treino gerado
+  console.group(`  🏋️‍♂️ Treino: ${name}`);
+  console.log(`  📊 Volume: ${calculateWorkoutVolume(workout)}`);
+  console.log(`  ⏱️ Tempo: ${workout.estimatedTime}min`);
+  console.log(`  💪 Exercícios: ${workout.exercises.length}`);
+  console.log(`  🎯 Compostos: ${workout.exercises.filter(e => e.compound).length}`);
+  console.log(`  🔄 Descanso médio: ${Math.round(workout.exercises.reduce((acc, ex) => acc + ex.restTime, 0) / workout.exercises.length)}s`);
+  console.groupEnd();
+
   return workout;
+}
+
+function calculateWorkoutTime(exercises: Exercise[]): number {
+  if (!exercises || exercises.length === 0) return 0;
+  
+  return exercises.reduce((total, ex) => {
+    if (!ex.sets || !ex.restTime) return total;
+    
+    const setTime = 45; // Tempo médio por série em segundos
+    const totalSetTime = ex.sets * setTime;
+    const totalRestTime = (ex.sets - 1) * ex.restTime;
+    return total + (totalSetTime + totalRestTime) / 60; // Converte para minutos
+  }, 0);
 }
 
 export function createTrainingProgram(data: OnboardingData): TrainingProgram {
@@ -319,18 +396,18 @@ function generateWorkoutDays(data: OnboardingData): WorkoutDay[] {
 
   // Configurações base ajustadas por nível e frequência anterior
   const baseConfig = {
-    ...EXPERIENCE_CONFIG[level],
+    ...EXPERIENCE_CONFIG_DETAILS[level],
     setsPerExercise: Math.round(
-      EXPERIENCE_CONFIG[level].setsPerExercise *
+      EXPERIENCE_CONFIG_DETAILS[level].setsPerExercise *
         FREQUENCY_ADJUSTMENTS[frequency].volumeMultiplier
     ),
     restTime: Math.round(
-      EXPERIENCE_CONFIG[level].restTime *
+      EXPERIENCE_CONFIG_DETAILS[level].restTime *
         FREQUENCY_ADJUSTMENTS[frequency].restMultiplier
     ),
   };
 
-  const goalConfig = GOALS_CONFIG[goal];
+  const goalConfig = GOALS_CONFIG_DETAILS[goal];
   const timeAdjustment = adjustForTime(data.trainingTime);
 
   // Implementa periodização básica
@@ -838,15 +915,17 @@ function selectExercisesForMuscle(params: {
   const cached = exerciseCache.get(cacheKey);
 
   if (cached) {
+    // Convertendo CachedExercise para ExerciseData
     return cached.map((ex) => ({
       ...ex,
       id: `${ex.id}_${params.variation}`,
+      levels: [params.level === "none" ? "beginner" : params.level] as ExerciseLevel[],
+      equipment: ['bodyweight'],
+      unilateral: false,
     }));
   }
 
   const { muscle, level, count, variation } = params;
-
-  // Convertemos o nível para ExerciseLevel
   const exerciseLevel: ExerciseLevel = level === "none" ? "beginner" : level;
 
   // Pega exercícios disponíveis para o nível
@@ -868,17 +947,16 @@ function selectExercisesForMuscle(params: {
     id: `${ex.id}_${variation}_${i}`,
   }));
 
-  exerciseCache.set(cacheKey, exercises);
-  return exercises;
-}
+  // Armazena no cache apenas os campos necessários
+  exerciseCache.set(cacheKey, exercises.map(ex => ({
+    id: ex.id,
+    name: ex.name,
+    targetMuscle: ex.targetMuscle,
+    compound: ex.compound,
+    priority: ex.priority
+  })));
 
-function calculateWorkoutTime(exercises: Exercise[]): number {
-  return exercises.reduce((total, ex) => {
-    const setTime = 45; // Tempo médio por série em segundos
-    const totalSetTime = ex.sets * setTime;
-    const totalRestTime = (ex.sets - 1) * ex.restTime;
-    return total + (totalSetTime + totalRestTime) / 60; // Converte para minutos
-  }, 0);
+  return exercises;
 }
 
 function generateUniqueId(): string {
@@ -1090,4 +1168,153 @@ function redistributeWorkouts(
       }),
     };
   });
+}
+
+// Interface para o documento no Firestore
+export interface TrainingProgramDocument {
+  id: string;
+  userId: string;
+  name: string;
+  level: TrainingExperience;
+  style: TrainingStyle;
+  workoutDays: WorkoutDay[];
+  frequency: number;
+  restDays: number[];
+  createdAt: string;
+  updatedAt: string;
+  active: boolean; // Para controlar qual programa está ativo
+  progression: {
+    currentWeek: number;
+    lastUpdated: string;
+    volumeIncrease: number;
+    deloadWeek: number;
+  };
+}
+
+// Função para salvar o programa de treino
+export async function saveTrainingProgram(userId: string, data: OnboardingData) {
+  try {
+    console.log("🏋️‍♂️ Gerando programa de treino...");
+    const program = createTrainingProgram(data);
+    
+    if (!program.workoutDays || program.workoutDays.length === 0) {
+      throw new Error("Programa de treino não foi gerado corretamente");
+    }
+
+    const trainingProgramDoc: TrainingProgramDocument = {
+      ...program,
+      userId,
+      active: true,
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString(),
+      progression: {
+        currentWeek: 1,
+        lastUpdated: new Date().toISOString(),
+        volumeIncrease: 0,
+        deloadWeek: 4,
+      }
+    };
+
+    console.log("📝 Programa gerado:", JSON.stringify(trainingProgramDoc, null, 2));
+    console.log("💾 Salvando programa no Firestore...");
+    
+    await setDoc(
+      doc(db, "trainingPrograms", userId), 
+      trainingProgramDoc
+    );
+    
+    console.log("✅ Programa de treino salvo com sucesso!");
+    return trainingProgramDoc;
+  } catch (error) {
+    console.error("❌ Erro ao salvar programa de treino:", error);
+    throw error;
+  }
+}
+
+// Função para buscar o programa ativo do usuário
+export async function getUserActiveProgram(userId: string): Promise<TrainingProgramDocument | null> {
+  try {
+    const programDoc = await getDoc(doc(db, "trainingPrograms", userId));
+    
+    if (programDoc.exists()) {
+      return programDoc.data() as TrainingProgramDocument;
+    }
+    
+    return null;
+  } catch (error) {
+    console.error("❌ Erro ao buscar programa de treino:", error);
+    throw error;
+  }
+}
+
+// Função para atualizar a progressão do treino
+export async function updateTrainingProgression(
+  userId: string, 
+  progression: TrainingProgramDocument['progression']
+) {
+  try {
+    await updateDoc(doc(db, "trainingPrograms", userId), {
+      'progression': progression,
+      'updatedAt': new Date().toISOString()
+    });
+  } catch (error) {
+    console.error("❌ Erro ao atualizar progressão:", error);
+    throw error;
+  }
+}
+
+interface WorkoutFeedback {
+  difficulty: 1 | 2 | 3 | 4 | 5;
+  completedSets: number;
+  failedSets: number;
+  energyLevel: 1 | 2 | 3 | 4 | 5;
+  muscularPain: 1 | 2 | 3 | 4 | 5;
+}
+
+function calculateAdjustmentFactor(feedback: WorkoutFeedback): number {
+  // Calcula um fator de ajuste entre 0.8 e 1.2 baseado no feedback
+  const difficultyFactor = (feedback.difficulty - 3) * 0.1;
+  const failureFactor = (feedback.failedSets / feedback.completedSets) * -0.2;
+  const energyFactor = (feedback.energyLevel - 3) * 0.05;
+  const painFactor = (feedback.muscularPain - 3) * -0.05;
+
+  const totalAdjustment = 1 + difficultyFactor + failureFactor + energyFactor + painFactor;
+  
+  // Limita o ajuste entre 0.8 e 1.2
+  return Math.min(Math.max(totalAdjustment, 0.8), 1.2);
+}
+
+function adjustSets(currentSets: number, adjustmentFactor: number): number {
+  // Ajusta o número de séries baseado no fator de ajuste
+  const newSets = Math.round(currentSets * adjustmentFactor);
+  
+  // Garante que o número de séries fique entre 2 e 5
+  return Math.min(Math.max(newSets, 2), 5);
+}
+
+function adjustRest(currentRest: number, energyLevel: number): number {
+  // Ajusta o tempo de descanso baseado no nível de energia
+  const energyFactor = (energyLevel - 3) * -0.1; // Menos energia = mais descanso
+  const adjustment = 1 + energyFactor;
+  
+  const newRest = Math.round(currentRest * adjustment);
+  
+  // Garante que o tempo de descanso fique entre 30s e 120s
+  return Math.min(Math.max(newRest, 30), 120);
+}
+
+function adjustNextWorkout(
+  currentWorkout: WorkoutDay,
+  feedback: WorkoutFeedback
+): WorkoutDay {
+  const adjustmentFactor = calculateAdjustmentFactor(feedback);
+  
+  return {
+    ...currentWorkout,
+    exercises: currentWorkout.exercises.map(exercise => ({
+      ...exercise,
+      sets: adjustSets(exercise.sets, adjustmentFactor),
+      restTime: adjustRest(exercise.restTime, feedback.energyLevel)
+    }))
+  };
 }

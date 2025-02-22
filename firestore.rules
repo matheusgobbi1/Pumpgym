@@ -1,0 +1,29 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // Função auxiliar para verificar se o usuário está autenticado
+    function isAuthenticated() {
+      return request.auth != null;
+    }
+
+    // Função para verificar se o usuário é dono do documento
+    function isOwner(userId) {
+      return isAuthenticated() && request.auth.uid == userId;
+    }
+
+    // Regras para a coleção users
+    match /users/{userId} {
+      allow read, write: if isOwner(userId);
+    }
+
+    // Regras para a coleção nutritionPlans
+    match /nutritionPlans/{userId} {
+      allow read, write: if isOwner(userId);
+    }
+
+    // Regras para a coleção trainingPrograms
+    match /trainingPrograms/{userId} {
+      allow read, write: if isOwner(userId);
+    }
+  }
+} 

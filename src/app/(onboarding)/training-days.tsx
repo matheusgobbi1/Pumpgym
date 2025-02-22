@@ -1,4 +1,4 @@
-import { View, Text, StyleSheet, Dimensions } from "react-native";
+import { View, Text, StyleSheet, Dimensions, ViewStyle, TextStyle } from "react-native";
 import { useRouter } from "expo-router";
 import { Button } from "../../components/Button";
 import { OnboardingLayout } from "../../components/OnboardingLayout";
@@ -25,6 +25,21 @@ const WEEK_DAYS = [
 
 const { width } = Dimensions.get("window");
 const CARD_SIZE = (width - 48 - 16) / 3;
+
+// Definir interface para os estilos
+interface Styles {
+  title: TextStyle;
+  infoContainer: ViewStyle;
+  infoText: TextStyle;
+  calendar: ViewStyle;
+  dayCard: ViewStyle;
+  dayName: TextStyle;
+  checkmark: ViewStyle;
+  footer: ViewStyle;
+  counter: TextStyle;
+  tips: ViewStyle;
+  tipText: TextStyle;
+}
 
 export default function TrainingDaysScreen() {
   const router = useRouter();
@@ -154,7 +169,7 @@ export default function TrainingDaysScreen() {
   );
 }
 
-const styles = StyleSheet.create({
+const styles = StyleSheet.create<Styles>({
   title: {
     fontSize: 32,
     fontWeight: "bold",
@@ -163,7 +178,7 @@ const styles = StyleSheet.create({
   infoContainer: {
     flexDirection: "row",
     alignItems: "center",
-    backgroundColor: colors => `${colors.primary}10`,
+    backgroundColor: "rgba(0,0,0,0.05)",
     padding: 16,
     borderRadius: 12,
     marginBottom: 24,

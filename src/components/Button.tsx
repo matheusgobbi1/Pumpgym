@@ -4,7 +4,7 @@ import { useColors } from "../constants/colors";
 interface ButtonProps {
   onPress: () => void;
   label: string;
-  variant?: "primary" | "secondary";
+  variant?: "primary" | "secondary" | "outline";
   disabled?: boolean;
   icon?: React.ReactNode;
 }

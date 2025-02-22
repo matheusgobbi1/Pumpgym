@@ -1,5 +1,7 @@
 import { isValid, parse, differenceInYears } from "date-fns";
 import { OnboardingData } from "../contexts/OnboardingContext";
+import { WorkoutDay } from "./training";
+import { ValidationResult, ValidationIssue, MuscleGroup } from "../types/training";
 
 interface ValidationError {
   field: string;
@@ -176,8 +178,23 @@ function calculateAge(birthDate: Date): number {
 }
 
 export function validateWorkout(workout: WorkoutDay): ValidationResult {
-  // Verificar tempo total
-  // Balancear grupos musculares
-  // Verificar volume adequado
-  // Ajustar baseado em limitações
+  const issues: ValidationIssue[] = [];
+  
+  // Verificações básicas
+  if (!workout.exercises || workout.exercises.length === 0) {
+    return {
+      isValid: false,
+      issues: [{
+        type: "volume",
+        message: "Treino sem exercícios",
+        muscle: "chest" as MuscleGroup,
+        days: [],
+      }]
+    };
+  }
+  
+  return {
+    isValid: issues.length === 0,
+    issues
+  };
 }

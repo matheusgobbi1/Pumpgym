@@ -1,5 +1,6 @@
-// Sugestão: Centralizar exportações
-export { Button } from './Button';
+// Centraliza a exportação de todos os componentes
+export * from './Input';
+export * from './Button';
 export { ErrorMessage } from './ErrorMessage';
 export { LoadingSteps } from './LoadingSteps';
 export { OnboardingLayout } from './OnboardingLayout';

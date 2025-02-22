@@ -1,5 +1,4 @@
 import { Stack } from "expo-router";
-import { GestureHandlerRootView } from "react-native-gesture-handler";
 import { ThemeProvider } from "../contexts/ThemeContext";
 import { OnboardingProvider } from "../contexts/OnboardingContext";
 import { AuthProvider } from "../contexts/AuthContext";
@@ -9,14 +8,12 @@ export default function RootLayout() {
     <ThemeProvider>
       <AuthProvider>
         <OnboardingProvider>
-          <GestureHandlerRootView style={{ flex: 1 }}>
-            <Stack
-              screenOptions={{
-                headerShown: false,
-                animation: "slide_from_right",
-              }}
-            />
-          </GestureHandlerRootView>
+          <Stack screenOptions={{ headerShown: false }}>
+            <Stack.Screen name="index" />
+            <Stack.Screen name="(auth)" />
+            <Stack.Screen name="(tabs)" />
+            <Stack.Screen name="(onboarding)" />
+          </Stack>
         </OnboardingProvider>
       </AuthProvider>
     </ThemeProvider>

@@ -6,7 +6,8 @@
     "orientation": "portrait",
     "scheme": "pumpgym",
     "assets": [
-      "./src/assets/sounds/*"],
+      "./src/assets/sounds/*"
+    ],
     "userInterfaceStyle": "light",
     "assetBundlePatterns": [
       "**/*"
@@ -18,6 +19,9 @@
       "adaptiveIcon": {
         "backgroundColor": "#ffffff"
       }
-    }
+    },
+    "plugins": [
+      "expo-secure-store"
+    ]
   }
 }

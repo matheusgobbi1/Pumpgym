@@ -1,4 +1,4 @@
-import { View, Text, StyleSheet, Dimensions, ViewStyle, TextStyle } from "react-native";
+import { View, Text, StyleSheet, Dimensions, Pressable } from "react-native";
 import { useRouter } from "expo-router";
 import { Button } from "../../components/Button";
 import { OnboardingLayout } from "../../components/OnboardingLayout";
@@ -6,12 +6,11 @@ import { useColors } from "../../constants/colors";
 import { useOnboarding } from "../../contexts/OnboardingContext";
 import { MaterialCommunityIcons } from "@expo/vector-icons";
 import { MotiView } from "moti";
-import { Pressable } from "react-native";
-import { useState } from "react";
 
-const CURRENT_STEP = 7;
-const TOTAL_STEPS = 15;
-const MAX_TRAINING_DAYS = 6;
+const CURRENT_STEP_BEGINNER = 6;
+const CURRENT_STEP_ADVANCED = 3;
+const TOTAL_STEPS_BEGINNER = 14;
+const TOTAL_STEPS_ADVANCED = 11;
 
 const WEEK_DAYS = [
   { id: 0, name: "Domingo", short: "Dom" },
@@ -26,67 +25,50 @@ const WEEK_DAYS = [
 const { width } = Dimensions.get("window");
 const CARD_SIZE = (width - 48 - 16) / 3;
 
-// Definir interface para os estilos
-interface Styles {
-  title: TextStyle;
-  infoContainer: ViewStyle;
-  infoText: TextStyle;
-  calendar: ViewStyle;
-  dayCard: ViewStyle;
-  dayName: TextStyle;
-  checkmark: ViewStyle;
-  footer: ViewStyle;
-  counter: TextStyle;
-  tips: ViewStyle;
-  tipText: TextStyle;
-}
-
 export default function TrainingDaysScreen() {
   const router = useRouter();
   const colors = useColors();
   const { data, dispatch } = useOnboarding();
-  const [selectedDays, setSelectedDays] = useState<number[]>(data.trainingDays || []);
+  const isAdvancedUser = ["intermediate", "advanced"].includes(data.trainingExperience || '');
+  const currentStep = isAdvancedUser ? CURRENT_STEP_ADVANCED : CURRENT_STEP_BEGINNER;
+  const totalSteps = isAdvancedUser ? TOTAL_STEPS_ADVANCED : TOTAL_STEPS_BEGINNER;
 
-  const handleToggleDay = (dayId: number) => {
-    setSelectedDays(current => {
-      if (current.includes(dayId)) {
-        return current.filter(id => id !== dayId);
-      }
-      if (current.length >= MAX_TRAINING_DAYS) {
-        return current;
-      }
-      return [...current, dayId].sort((a, b) => a - b);
+  const toggleDay = (dayId: number) => {
+    const currentDays = data.trainingDays || [];
+    dispatch({
+      type: "SET_TRAINING_DAYS",
+      payload: currentDays.includes(dayId)
+        ? currentDays.filter(d => d !== dayId)
+        : [...currentDays, dayId].sort((a, b) => a - b),
     });
   };
 
   const handleNext = () => {
-    dispatch({
-      type: "SET_TRAINING_DAYS",
-      payload: selectedDays,
-    });
     router.push("/birth-date");
   };
 
+  const isValid = (data.trainingDays?.length || 0) > 0;
+
   return (
     <OnboardingLayout
-      currentStep={CURRENT_STEP}
-      totalSteps={TOTAL_STEPS}
-      showBackButton
+      currentStep={currentStep}
+      totalSteps={totalSteps}
       footer={
         <View style={styles.footer}>
           <Text style={[styles.counter, { color: colors.textSecondary }]}>
-            {selectedDays.length} {selectedDays.length === 1 ? 'dia' : 'dias'} selecionado{selectedDays.length === 1 ? '' : 's'}
+            {data.trainingDays?.length || 0} {data.trainingDays?.length === 1 ? 'dia' : 'dias'} selecionado{data.trainingDays?.length === 1 ? '' : 's'}
           </Text>
-          <Button
-            label="Próximo"
+          <Button 
+            label="Próximo" 
             onPress={handleNext}
-            disabled={selectedDays.length === 0}
+            disabled={!isValid}
           />
         </View>
       }
+      showBackButton
     >
       <Text style={[styles.title, { color: colors.text }]}>
-        Quais dias você{"\n"}pretende treinar?
+        Quais dias você{"\n"}pode treinar?
       </Text>
 
       <View style={styles.infoContainer}>
@@ -96,7 +78,9 @@ export default function TrainingDaysScreen() {
           color={colors.primary}
         />
         <Text style={[styles.infoText, { color: colors.textSecondary }]}>
-          Selecione até {MAX_TRAINING_DAYS} dias, garantindo pelo menos 1 dia de descanso semanal
+          {isAdvancedUser 
+            ? "Selecione os dias disponíveis para treino. Para PPL, recomendamos 5-6 dias" 
+            : "Selecione os dias que você tem disponível para treinar. Recomendamos 3-4 dias"}
         </Text>
       </View>
 
@@ -113,11 +97,11 @@ export default function TrainingDaysScreen() {
             }}
           >
             <Pressable
-              onPress={() => handleToggleDay(day.id)}
+              onPress={() => toggleDay(day.id)}
               style={({ pressed }) => [
                 styles.dayCard,
                 {
-                  backgroundColor: selectedDays.includes(day.id)
+                  backgroundColor: data.trainingDays?.includes(day.id)
                     ? colors.primary
                     : colors.buttonBackground,
                   opacity: pressed ? 0.8 : 1,
@@ -128,7 +112,7 @@ export default function TrainingDaysScreen() {
                 style={[
                   styles.dayName,
                   {
-                    color: selectedDays.includes(day.id)
+                    color: data.trainingDays?.includes(day.id)
                       ? colors.buttonText
                       : colors.text,
                   },
@@ -136,7 +120,7 @@ export default function TrainingDaysScreen() {
               >
                 {day.short}
               </Text>
-              {selectedDays.includes(day.id) && (
+              {data.trainingDays?.includes(day.id) && (
                 <MotiView
                   from={{ scale: 0 }}
                   animate={{ scale: 1 }}
@@ -169,7 +153,7 @@ export default function TrainingDaysScreen() {
   );
 }
 
-const styles = StyleSheet.create<Styles>({
+const styles = StyleSheet.create({
   title: {
     fontSize: 32,
     fontWeight: "bold",

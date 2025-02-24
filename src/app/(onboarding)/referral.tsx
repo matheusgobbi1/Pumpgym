@@ -7,8 +7,10 @@ import { OnboardingLayout } from "../../components/OnboardingLayout";
 import { useColors } from "../../constants/colors";
 import { useOnboarding } from "../../contexts/OnboardingContext";
 
-const TOTAL_STEPS = 14;
-const CURRENT_STEP = 13;
+const CURRENT_STEP_BEGINNER = 13;
+const CURRENT_STEP_ADVANCED = 10;
+const TOTAL_STEPS_BEGINNER = 14;
+const TOTAL_STEPS_ADVANCED = 11;
 
 const REFERRAL_OPTIONS = [
   {
@@ -60,6 +62,10 @@ export default function ReferralScreen() {
   const { data, dispatch } = useOnboarding();
   const colors = useColors();
 
+  const isAdvancedUser = ["intermediate", "advanced"].includes(data.trainingExperience || '');
+  const currentStep = isAdvancedUser ? CURRENT_STEP_ADVANCED : CURRENT_STEP_BEGINNER;
+  const totalSteps = isAdvancedUser ? TOTAL_STEPS_ADVANCED : TOTAL_STEPS_BEGINNER;
+
   const handleSelect = (source: typeof REFERRAL_OPTIONS[number]["id"]) => {
     dispatch({
       type: "SET_REFERRAL_SOURCE",
@@ -73,8 +79,8 @@ export default function ReferralScreen() {
 
   return (
     <OnboardingLayout
-      currentStep={CURRENT_STEP}
-      totalSteps={TOTAL_STEPS}
+      currentStep={currentStep}
+      totalSteps={totalSteps}
       footer={
         <Button 
           label="Próximo" 

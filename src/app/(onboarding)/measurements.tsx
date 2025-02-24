@@ -11,8 +11,10 @@ import { useState } from "react";
 import { validateUserData } from "../../services/validation";
 import { ErrorMessage } from "../../components/ErrorMessage";
 
-const CURRENT_STEP = 8;
-const TOTAL_STEPS = 14;
+const CURRENT_STEP_BEGINNER = 8;
+const CURRENT_STEP_ADVANCED = 5;
+const TOTAL_STEPS_BEGINNER = 14;
+const TOTAL_STEPS_ADVANCED = 11;
 
 export default function MeasurementsScreen() {
   const router = useRouter();
@@ -21,6 +23,10 @@ export default function MeasurementsScreen() {
   const [height, setHeight] = useState<string>("");
   const [weight, setWeight] = useState<string>("");
   const [error, setError] = useState<string | null>(null);
+
+  const isAdvancedUser = ["intermediate", "advanced"].includes(data.trainingExperience || '');
+  const currentStep = isAdvancedUser ? CURRENT_STEP_ADVANCED : CURRENT_STEP_BEGINNER;
+  const totalSteps = isAdvancedUser ? TOTAL_STEPS_ADVANCED : TOTAL_STEPS_BEGINNER;
 
   const handleNext = () => {
     if (height && weight) {
@@ -59,13 +65,14 @@ export default function MeasurementsScreen() {
 
   return (
     <OnboardingLayout
-      currentStep={CURRENT_STEP}
-      totalSteps={TOTAL_STEPS}
+      currentStep={currentStep}
+      totalSteps={totalSteps}
       footer={
         <Button
           label="Próximo"
           onPress={handleNext}
           disabled={!height || !weight}
+          showBackButton
         />
       }
     >

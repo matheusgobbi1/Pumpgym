@@ -5,6 +5,15 @@ import {
   ReactNode,
   useEffect,
 } from "react";
+import { useRouter } from "expo-router";
+import { useAuth } from "./AuthContext";
+import { generateTrainingPlan } from "../services/aiTrainingGenerator";
+import { saveUserProgram, getUserActiveProgram } from "../services/training";
+import { NutritionTracker } from "../services/nutritionTracker";
+import { createNutritionPlan } from "../services/nutrition";
+import { saveUserProfile } from "../services/user";
+import { Alert } from "react-native";
+import AsyncStorage from "@react-native-async-storage/async-storage";
 
 export type MacroDistribution =
   | "moderate" // Moderate Carb (30/35/35)
@@ -38,7 +47,7 @@ export type TrainingGoals =
   | "weight_loss"
   | "general_fitness";
 
-export type OnboardingData = {
+export interface OnboardingData {
   gender?: "masculino" | "feminino" | "outro";
   birthDate?: Date;
   height?: number;
@@ -66,7 +75,8 @@ export type OnboardingData = {
   trainingTime?: TrainingTime;
   trainingGoals?: TrainingGoals;
   trainingDays?: number[]; // 0 = domingo, 1 = segunda, etc
-};
+  hasCompletedOnboarding?: boolean;
+}
 
 type ReferralSource =
   | "instagram"
@@ -167,11 +177,71 @@ const OnboardingContext = createContext<OnboardingContextType | undefined>(
 
 export function OnboardingProvider({ children }: { children: ReactNode }) {
   const [data, dispatch] = useReducer(onboardingReducer, initialState);
+  const router = useRouter();
+  const user = useAuth();
 
   // Log quando os dados mudam
   useEffect(() => {
     console.log("📝 Estado do Onboarding atualizado:", data);
   }, [data]);
+
+  const handleFinishOnboarding = async () => {
+    if (!user?.uid) {
+      console.error("❌ Usuário não encontrado");
+      return;
+    }
+
+    try {
+      console.log("🔄 Iniciando finalização do onboarding...");
+
+      // Salvar perfil primeiro
+      await saveUserProfile(user.uid, {
+        ...data,
+        hasCompletedOnboarding: true
+      });
+      console.log("✅ Perfil salvo");
+
+      // Gerar programa
+      const trainingPlan = await generateTrainingPlan(data);
+      console.log("�� Programa gerado:", JSON.stringify(trainingPlan, null, 2));
+
+      // Tentar salvar programa algumas vezes
+      let success = false;
+      for (let i = 0; i < 3; i++) {
+        success = await saveUserProgram(user.uid, trainingPlan);
+        if (success) break;
+        await new Promise(resolve => setTimeout(resolve, 1000)); // esperar 1s entre tentativas
+      }
+
+      if (!success) {
+        throw new Error("Falha ao salvar programa após várias tentativas");
+      }
+
+      // Verificar se o programa foi salvo
+      const saved = await getUserActiveProgram(user.uid);
+      if (!saved?.workouts?.length) {
+        throw new Error("Programa não encontrado após salvar");
+      }
+
+      console.log("✅ Programa verificado com sucesso");
+
+      // Salvar plano nutricional
+      const nutritionPlan = createNutritionPlan(data);
+      await NutritionTracker.saveNutritionPlan(user.uid, nutritionPlan);
+
+      // Pequeno delay antes de redirecionar
+      await new Promise(resolve => setTimeout(resolve, 1000));
+
+      console.log("✅ Onboarding finalizado com sucesso!");
+      router.replace('/(tabs)');
+    } catch (error) {
+      console.error('❌ Erro:', error);
+      Alert.alert(
+        'Erro', 
+        'Não foi possível salvar seus dados. Tente novamente.'
+      );
+    }
+  };
 
   return (
     <OnboardingContext.Provider value={{ data, dispatch }}>

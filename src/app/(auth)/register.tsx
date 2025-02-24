@@ -1,11 +1,11 @@
-import { View, Text, StyleSheet } from "react-native";
+import { View, Text, StyleSheet, Alert } from "react-native";
 import { useRouter } from "expo-router";
 import { Button } from "../../components/Button";
 import { Input } from "../../components/Input";
 import { colors } from "../../constants/colors";
 import { useState } from "react";
 import { createUserWithEmailAndPassword } from "firebase/auth";
-import { auth } from "../../services/firebase";
+import { auth, saveAuthCredentials } from "../../services/firebase";
 
 export default function RegisterScreen() {
   const router = useRouter();
@@ -17,11 +17,14 @@ export default function RegisterScreen() {
   const handleRegister = async () => {
     try {
       setLoading(true);
-      setError("");
-      await createUserWithEmailAndPassword(auth, email, password);
-      router.replace("/(onboarding)/gender");
-    } catch (error: any) {
-      setError(error.message);
+      const userCredential = await createUserWithEmailAndPassword(auth, email, password);
+      await saveAuthCredentials(email, password);
+      
+      // Novo usuário sempre vai para onboarding
+      router.replace('/(onboarding)/gender');
+    } catch (error) {
+      console.error('Erro ao criar conta:', error);
+      Alert.alert('Erro', 'Não foi possível criar sua conta');
     } finally {
       setLoading(false);
     }

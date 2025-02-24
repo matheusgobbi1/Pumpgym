@@ -5,59 +5,67 @@ import { colors } from "../constants/colors";
 import { useAuth } from "../contexts/AuthContext";
 import { useEffect } from "react";
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import { SplashScreen } from '../components/SplashScreen';
+import { doc, getDoc } from 'firebase/firestore';
+import { db } from '../services/firebase';
 
-export default function SplashScreen() {
-  const router = useRouter();
+export default function Index() {
   const { user, isLoading } = useAuth();
+  const router = useRouter();
 
   useEffect(() => {
-    const checkAuthAndOnboarding = async () => {
-      if (user) {
-        try {
-          const hasCompletedOnboarding = await AsyncStorage.getItem(`@onboarding_completed_${user.uid}`);
-          if (hasCompletedOnboarding === 'true') {
-            router.replace("/(tabs)/home");
-          } else {
-            router.replace("/(onboarding)/gender");
-          }
-        } catch (error) {
-          console.error('Erro ao verificar status do onboarding:', error);
-        }
-      }
-    };
+    async function checkAuthState() {
+      try {
+        if (isLoading) return;
 
-    if (!isLoading) {
-      checkAuthAndOnboarding();
+        // Se não há usuário, vai para login
+        if (!user) {
+          console.log("👤 Usuário não autenticado, redirecionando para login...");
+          router.replace('/(auth)/login');
+          return;
+        }
+
+        console.log("🔍 Verificando estado do usuário...");
+
+        // Verifica se já completou onboarding
+        const hasCompletedOnboarding = await AsyncStorage.getItem('hasCompletedOnboarding');
+        
+        if (hasCompletedOnboarding === 'true') {
+          console.log("✅ Onboarding completo, indo para home");
+          router.replace('/(tabs)/home');
+          return;
+        }
+
+        // Verifica se tem perfil no Firestore
+        const userDoc = await getDoc(doc(db, "users", user.uid));
+        
+        if (userDoc.exists()) {
+          const userData = userDoc.data();
+          if (userData?.hasCompletedOnboarding) {
+            console.log("✅ Perfil encontrado, indo para home");
+            await AsyncStorage.setItem('hasCompletedOnboarding', 'true');
+            router.replace('/(tabs)/home');
+          } else {
+            console.log("👉 Perfil sem onboarding, continuando onboarding");
+            router.replace('/(onboarding)/gender');
+          }
+        } else {
+          console.log("👉 Perfil não encontrado, iniciando onboarding");
+          router.replace('/(onboarding)/gender');
+        }
+
+      } catch (error) {
+        console.error('❌ Erro ao verificar estado:', error);
+        // Em caso de erro, volta para login
+        router.replace('/(auth)/login');
+      }
     }
+
+    checkAuthState();
   }, [user, isLoading]);
 
-  if (isLoading) {
-    return (
-      <View style={styles.container}>
-        <ActivityIndicator size="large" color={colors.primary} />
-      </View>
-    );
-  }
-
-  return (
-    <View style={styles.container}>
-      <Text style={styles.title}>PumpGym</Text>
-      <Text style={styles.subtitle}>
-        Sua jornada para uma vida mais saudável começa aqui
-      </Text>
-      
-      <Button
-        label="Criar conta"
-        onPress={() => router.push("/(auth)/register")}
-      />
-      
-      <Button
-        label="Já tenho conta"
-        variant="secondary"
-        onPress={() => router.push("/(auth)/login")}
-      />
-    </View>
-  );
+  // Mostra splash screen enquanto carrega
+  return <SplashScreen />;
 }
 
 const styles = StyleSheet.create({

@@ -9,18 +9,25 @@ export type MuscleGroup =
   | "legs"
   | "core";
 
-export interface ExerciseData
-  extends Omit<Exercise, "sets" | "reps" | "restTime"> {
-  levels: ExerciseLevel[];
+export interface ExerciseData {
+  id: string;
+  name: string;
+  targetMuscle: MuscleGroup;
+  muscleGroups: string[];
+  levels: ("beginner" | "intermediate" | "advanced")[];
   equipment: ("bodyweight" | "dumbbell" | "barbell" | "machine" | "cable")[];
   compound: boolean;
   unilateral: boolean;
-  priority: number; // 1-5
-  videoUrl?: string; // Para futura implementação
-  tips?: string[]; // Dicas de execução
+  priority: number;
+  videoUrl?: string;
+  tips?: string[];
 }
 
-export type ExerciseLevel = "beginner" | "intermediate" | "advanced";
+export interface ExerciseLevel {
+  beginner: string;
+  intermediate: string;
+  advanced: string;
+}
 
 export const EXERCISES: Record<MuscleGroup, ExerciseData[]> = {
   chest: [
@@ -28,6 +35,7 @@ export const EXERCISES: Record<MuscleGroup, ExerciseData[]> = {
       id: "bench_press",
       name: "Supino Reto",
       targetMuscle: "chest",
+      muscleGroups: ["chest", "shoulders", "triceps"],
       levels: ["beginner", "intermediate", "advanced"],
       equipment: ["barbell", "dumbbell"],
       compound: true,
@@ -43,6 +51,7 @@ export const EXERCISES: Record<MuscleGroup, ExerciseData[]> = {
       id: "incline_press",
       name: "Supino Inclinado",
       targetMuscle: "chest",
+      muscleGroups: ["chest", "shoulders", "triceps"],
       levels: ["beginner", "intermediate", "advanced"],
       equipment: ["barbell", "dumbbell"],
       compound: true,
@@ -54,6 +63,7 @@ export const EXERCISES: Record<MuscleGroup, ExerciseData[]> = {
       id: "decline_press",
       name: "Supino Declinado",
       targetMuscle: "chest",
+      muscleGroups: ["chest", "shoulders", "triceps"],
       levels: ["intermediate", "advanced"],
       equipment: ["barbell", "dumbbell"],
       compound: true,
@@ -64,6 +74,7 @@ export const EXERCISES: Record<MuscleGroup, ExerciseData[]> = {
       id: "dumbbell_fly",
       name: "Crucifixo com Halteres",
       targetMuscle: "chest",
+      muscleGroups: ["chest", "shoulders", "triceps"],
       levels: ["beginner", "intermediate"],
       equipment: ["dumbbell"],
       compound: false,
@@ -74,6 +85,7 @@ export const EXERCISES: Record<MuscleGroup, ExerciseData[]> = {
       id: "cable_crossover",
       name: "Cross-over na Polia",
       targetMuscle: "chest",
+      muscleGroups: ["chest", "shoulders", "triceps"],
       levels: ["intermediate", "advanced"],
       equipment: ["cable"],
       compound: false,
@@ -84,6 +96,7 @@ export const EXERCISES: Record<MuscleGroup, ExerciseData[]> = {
       id: "push_up",
       name: "Flexão de Braço",
       targetMuscle: "chest",
+      muscleGroups: ["chest", "shoulders", "triceps"],
       levels: ["beginner", "intermediate", "advanced"],
       equipment: ["bodyweight"],
       compound: true,
@@ -96,6 +109,7 @@ export const EXERCISES: Record<MuscleGroup, ExerciseData[]> = {
       id: "lat_pulldown",
       name: "Puxada na Polia Alta",
       targetMuscle: "back",
+      muscleGroups: ["back", "shoulders", "triceps"],
       levels: ["beginner", "intermediate", "advanced"],
       equipment: ["cable"],
       compound: true,
@@ -106,6 +120,7 @@ export const EXERCISES: Record<MuscleGroup, ExerciseData[]> = {
       id: "bent_over_row",
       name: "Remada Curvada com Barra",
       targetMuscle: "back",
+      muscleGroups: ["back", "shoulders", "triceps"],
       levels: ["beginner", "intermediate", "advanced"],
       equipment: ["barbell"],
       compound: true,
@@ -116,6 +131,7 @@ export const EXERCISES: Record<MuscleGroup, ExerciseData[]> = {
       id: "one_arm_dumbbell_row",
       name: "Remada Unilateral com Halteres",
       targetMuscle: "back",
+      muscleGroups: ["back", "shoulders", "triceps"],
       levels: ["beginner", "intermediate", "advanced"],
       equipment: ["dumbbell"],
       compound: true,
@@ -126,6 +142,7 @@ export const EXERCISES: Record<MuscleGroup, ExerciseData[]> = {
       id: "seated_cable_row",
       name: "Remada Sentado na Máquina",
       targetMuscle: "back",
+      muscleGroups: ["back", "shoulders", "triceps"],
       levels: ["beginner", "intermediate", "advanced"],
       equipment: ["cable"],
       compound: true,
@@ -136,6 +153,7 @@ export const EXERCISES: Record<MuscleGroup, ExerciseData[]> = {
       id: "deadlift",
       name: "Levantamento Terra",
       targetMuscle: "back",
+      muscleGroups: ["back", "legs"],
       levels: ["intermediate", "advanced"],
       equipment: ["barbell"],
       compound: true,
@@ -146,6 +164,7 @@ export const EXERCISES: Record<MuscleGroup, ExerciseData[]> = {
       id: "back_extension",
       name: "Hiperextensão Lombar",
       targetMuscle: "back",
+      muscleGroups: ["back", "core"],
       levels: ["beginner", "intermediate"],
       equipment: ["machine", "bodyweight"],
       compound: false,
@@ -158,6 +177,7 @@ export const EXERCISES: Record<MuscleGroup, ExerciseData[]> = {
       id: "military_press",
       name: "Desenvolvimento Militar",
       targetMuscle: "shoulders",
+      muscleGroups: ["shoulders", "triceps"],
       levels: ["beginner", "intermediate", "advanced"],
       equipment: ["barbell", "dumbbell"],
       compound: true,
@@ -168,6 +188,7 @@ export const EXERCISES: Record<MuscleGroup, ExerciseData[]> = {
       id: "lateral_raise",
       name: "Elevação Lateral com Halteres",
       targetMuscle: "shoulders",
+      muscleGroups: ["shoulders", "triceps"],
       levels: ["beginner", "intermediate", "advanced"],
       equipment: ["dumbbell"],
       compound: false,
@@ -178,6 +199,7 @@ export const EXERCISES: Record<MuscleGroup, ExerciseData[]> = {
       id: "front_raise",
       name: "Elevação Frontal com Halteres",
       targetMuscle: "shoulders",
+      muscleGroups: ["shoulders", "triceps"],
       levels: ["beginner", "intermediate"],
       equipment: ["dumbbell"],
       compound: false,
@@ -188,6 +210,7 @@ export const EXERCISES: Record<MuscleGroup, ExerciseData[]> = {
       id: "reverse_fly",
       name: "Elevação Posterior",
       targetMuscle: "shoulders",
+      muscleGroups: ["shoulders", "triceps"],
       levels: ["beginner", "intermediate"],
       equipment: ["dumbbell", "machine"],
       compound: false,
@@ -198,6 +221,7 @@ export const EXERCISES: Record<MuscleGroup, ExerciseData[]> = {
       id: "arnold_press",
       name: "Arnold Press",
       targetMuscle: "shoulders",
+      muscleGroups: ["shoulders", "triceps"],
       levels: ["intermediate", "advanced"],
       equipment: ["dumbbell"],
       compound: true,
@@ -208,6 +232,7 @@ export const EXERCISES: Record<MuscleGroup, ExerciseData[]> = {
       id: "upright_row",
       name: "Remada Vertical",
       targetMuscle: "shoulders",
+      muscleGroups: ["shoulders", "triceps"],
       levels: ["intermediate", "advanced"],
       equipment: ["barbell", "cable"],
       compound: true,
@@ -220,6 +245,7 @@ export const EXERCISES: Record<MuscleGroup, ExerciseData[]> = {
       id: "barbell_curl",
       name: "Rosca Direta com Barra",
       targetMuscle: "biceps",
+      muscleGroups: ["biceps"],
       levels: ["beginner", "intermediate", "advanced"],
       equipment: ["barbell"],
       compound: false,
@@ -234,6 +260,7 @@ export const EXERCISES: Record<MuscleGroup, ExerciseData[]> = {
       id: "alternate_dumbbell_curl",
       name: "Rosca Alternada com Halteres",
       targetMuscle: "biceps",
+      muscleGroups: ["biceps"],
       levels: ["beginner", "intermediate", "advanced"],
       equipment: ["dumbbell"],
       compound: false,
@@ -244,6 +271,7 @@ export const EXERCISES: Record<MuscleGroup, ExerciseData[]> = {
       id: "hammer_curl",
       name: "Rosca Martelo",
       targetMuscle: "biceps",
+      muscleGroups: ["biceps"],
       levels: ["beginner", "intermediate", "advanced"],
       equipment: ["dumbbell"],
       compound: false,
@@ -254,6 +282,7 @@ export const EXERCISES: Record<MuscleGroup, ExerciseData[]> = {
       id: "concentration_curl",
       name: "Rosca Concentrada",
       targetMuscle: "biceps",
+      muscleGroups: ["biceps"],
       levels: ["intermediate", "advanced"],
       equipment: ["dumbbell"],
       compound: false,
@@ -264,6 +293,7 @@ export const EXERCISES: Record<MuscleGroup, ExerciseData[]> = {
       id: "preacher_curl",
       name: "Rosca Scott",
       targetMuscle: "biceps",
+      muscleGroups: ["biceps"],
       levels: ["intermediate", "advanced"],
       equipment: ["barbell", "dumbbell"],
       compound: false,
@@ -274,6 +304,7 @@ export const EXERCISES: Record<MuscleGroup, ExerciseData[]> = {
       id: "twenty_one_curl",
       name: "Rosca 21",
       targetMuscle: "biceps",
+      muscleGroups: ["biceps"],
       levels: ["intermediate", "advanced"],
       equipment: ["barbell", "dumbbell"],
       compound: false,
@@ -287,6 +318,7 @@ export const EXERCISES: Record<MuscleGroup, ExerciseData[]> = {
       id: "triceps_pushdown",
       name: "Tríceps na Polia Alta",
       targetMuscle: "triceps",
+      muscleGroups: ["triceps"],
       levels: ["beginner", "intermediate", "advanced"],
       equipment: ["cable"],
       compound: false,
@@ -297,6 +329,7 @@ export const EXERCISES: Record<MuscleGroup, ExerciseData[]> = {
       id: "skull_crusher",
       name: "Tríceps Testa",
       targetMuscle: "triceps",
+      muscleGroups: ["triceps"],
       levels: ["intermediate", "advanced"],
       equipment: ["barbell", "dumbbell"],
       compound: false,
@@ -308,6 +341,7 @@ export const EXERCISES: Record<MuscleGroup, ExerciseData[]> = {
       id: "dips",
       name: "Mergulho",
       targetMuscle: "triceps",
+      muscleGroups: ["triceps"],
       levels: ["intermediate", "advanced"],
       equipment: ["bodyweight"],
       compound: true,
@@ -318,6 +352,7 @@ export const EXERCISES: Record<MuscleGroup, ExerciseData[]> = {
       id: "overhead_extension",
       name: "Extensão Unilateral com Halter",
       targetMuscle: "triceps",
+      muscleGroups: ["triceps"],
       levels: ["beginner", "intermediate"],
       equipment: ["dumbbell"],
       compound: false,
@@ -328,6 +363,7 @@ export const EXERCISES: Record<MuscleGroup, ExerciseData[]> = {
       id: "triceps_kickback",
       name: "Tríceps Coice",
       targetMuscle: "triceps",
+      muscleGroups: ["triceps"],
       levels: ["beginner", "intermediate"],
       equipment: ["dumbbell"],
       compound: false,
@@ -338,6 +374,7 @@ export const EXERCISES: Record<MuscleGroup, ExerciseData[]> = {
       id: "rope_pushdown",
       name: "Extensão de Tríceps na Corda",
       targetMuscle: "triceps",
+      muscleGroups: ["triceps"],
       levels: ["beginner", "intermediate", "advanced"],
       equipment: ["cable"],
       compound: false,
@@ -350,6 +387,7 @@ export const EXERCISES: Record<MuscleGroup, ExerciseData[]> = {
       id: "squat",
       name: "Agachamento Livre",
       targetMuscle: "legs",
+      muscleGroups: ["legs"],
       levels: ["beginner", "intermediate", "advanced"],
       equipment: ["barbell"],
       compound: true,
@@ -365,6 +403,7 @@ export const EXERCISES: Record<MuscleGroup, ExerciseData[]> = {
       id: "leg_press",
       name: "Leg Press",
       targetMuscle: "legs",
+      muscleGroups: ["legs"],
       levels: ["beginner", "intermediate", "advanced"],
       equipment: ["machine"],
       compound: true,
@@ -375,6 +414,7 @@ export const EXERCISES: Record<MuscleGroup, ExerciseData[]> = {
       id: "lunges",
       name: "Afundo com Halteres",
       targetMuscle: "legs",
+      muscleGroups: ["legs"],
       levels: ["beginner", "intermediate", "advanced"],
       equipment: ["dumbbell", "bodyweight"],
       compound: true,
@@ -385,6 +425,7 @@ export const EXERCISES: Record<MuscleGroup, ExerciseData[]> = {
       id: "romanian_deadlift",
       name: "Stiff",
       targetMuscle: "legs",
+      muscleGroups: ["legs"],
       levels: ["intermediate", "advanced"],
       equipment: ["barbell", "dumbbell"],
       compound: true,
@@ -396,6 +437,7 @@ export const EXERCISES: Record<MuscleGroup, ExerciseData[]> = {
       id: "leg_extension",
       name: "Extensão de Pernas",
       targetMuscle: "legs",
+      muscleGroups: ["legs"],
       levels: ["beginner", "intermediate", "advanced"],
       equipment: ["machine"],
       compound: false,
@@ -406,6 +448,7 @@ export const EXERCISES: Record<MuscleGroup, ExerciseData[]> = {
       id: "leg_curl",
       name: "Flexão de Pernas",
       targetMuscle: "legs",
+      muscleGroups: ["legs"],
       levels: ["beginner", "intermediate", "advanced"],
       equipment: ["machine"],
       compound: false,
@@ -418,6 +461,7 @@ export const EXERCISES: Record<MuscleGroup, ExerciseData[]> = {
       id: "plank",
       name: "Prancha",
       targetMuscle: "core",
+      muscleGroups: ["core"],
       levels: ["beginner", "intermediate", "advanced"],
       equipment: ["bodyweight"],
       compound: true,
@@ -429,6 +473,7 @@ export const EXERCISES: Record<MuscleGroup, ExerciseData[]> = {
       id: "crunch",
       name: "Abdominal Crunch",
       targetMuscle: "core",
+      muscleGroups: ["core"],
       levels: ["beginner", "intermediate"],
       equipment: ["bodyweight"],
       compound: false,
@@ -439,6 +484,7 @@ export const EXERCISES: Record<MuscleGroup, ExerciseData[]> = {
       id: "leg_raise",
       name: "Elevação de Pernas",
       targetMuscle: "core",
+      muscleGroups: ["core"],
       levels: ["intermediate", "advanced"],
       equipment: ["bodyweight"],
       compound: false,
@@ -449,6 +495,7 @@ export const EXERCISES: Record<MuscleGroup, ExerciseData[]> = {
       id: "russian_twist",
       name: "Abdominal Oblíquo",
       targetMuscle: "core",
+      muscleGroups: ["core"],
       levels: ["beginner", "intermediate"],
       equipment: ["bodyweight", "dumbbell"],
       compound: false,
@@ -459,6 +506,7 @@ export const EXERCISES: Record<MuscleGroup, ExerciseData[]> = {
       id: "swiss_ball_crunch",
       name: "Crunch na Bola Suíça",
       targetMuscle: "core",
+      muscleGroups: ["core"],
       levels: ["beginner", "intermediate"],
       equipment: ["bodyweight"],
       compound: false,
@@ -469,6 +517,7 @@ export const EXERCISES: Record<MuscleGroup, ExerciseData[]> = {
       id: "reverse_crunch",
       name: "Abdominal Reverso",
       targetMuscle: "core",
+      muscleGroups: ["core"],
       levels: ["intermediate", "advanced"],
       equipment: ["bodyweight"],
       compound: false,

@@ -1,5 +1,7 @@
 import { TrainingExperience, TrainingGoals } from "../contexts/OnboardingContext";
-import { EXPERIENCE_CONFIG, GOALS_CONFIG, Exercise } from "../services/training";
+import { EXPERIENCE_CONFIG, GOALS_CONFIG } from "../services/training";
+import { ExerciseData } from './exercise';
+import { MuscleGroup } from "../services/exerciseDatabase";
 
 export type VolumeDistribution = "ascending" | "balanced" | "descending";
 export type ExerciseEquipment = "bodyweight" | "dumbbell" | "barbell" | "machine" | "cable";
@@ -54,7 +56,7 @@ export interface WorkoutParams {
   timeAdjustment: number;
   variation: number;
   level: TrainingExperience;
-  exercises?: Exercise[];
+  exercises?: ExerciseData[];
 }
 
 export interface GoalConfig {
@@ -72,4 +74,96 @@ export type WorkoutError = {
 };
 
 export type ExperienceConfig = typeof EXPERIENCE_CONFIG;
-export type GoalsConfig = typeof GOALS_CONFIG; 
+export type GoalsConfig = typeof GOALS_CONFIG;
+
+export interface SetTracking {
+  weight: number;
+  reps: number;
+  isComplete: boolean;
+}
+
+export interface Exercise {
+  exerciseId: string;
+  name: string;
+  sets: number;
+  reps: string;
+  restTime: number;
+  notes?: string;
+  targetMuscle?: MuscleGroup;
+  muscleGroups?: string[];
+  equipment?: string[];
+  compound?: boolean;
+  unilateral?: boolean;
+}
+
+export interface ExerciseData extends Exercise {
+  id: string;
+  levels: string[];
+}
+
+export interface SetData {
+  weight: number;
+  reps: number;
+  timestamp: number;
+}
+
+export interface WorkoutData {
+  name: string;
+  exercises: Exercise[];
+}
+
+export interface AIGeneratedWorkout {
+  name: string;
+  focusArea: string;
+  exercises: Exercise[];
+  scheduledDays: number[];
+}
+
+export interface WorkoutExercise {
+  exerciseId: string;
+  name: string;
+  sets: number;
+  reps: string | number;
+  restTime: number;
+  notes?: string;
+}
+
+export interface WorkoutProgress {
+  completedExercises: number;
+  totalExercises: number;
+  streak: number;
+  lastWorkout?: Date;
+}
+
+export interface AITrainingPlan {
+  workouts: AIGeneratedWorkout[];
+  recommendations: {
+    frequency: number;
+    restDays: number[];
+    progression: string;
+    notes: string;
+  };
+}
+
+export interface ExerciseHistory {
+  exerciseId: string;
+  sets: SetData[];
+  date: number;
+  workoutId: string;
+}
+
+export interface ExerciseProgress {
+  lastWeight: number;
+  bestWeight: number;
+  totalVolume: number;
+  history: SetData[];
+}
+
+export interface Workout {
+  id: string;
+  name: string;
+  exercises: WorkoutExercise[];
+  focusArea: string;
+  duration?: number;
+  difficulty?: string;
+} 

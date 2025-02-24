@@ -1,12 +1,14 @@
-import { View, Text, StyleSheet } from "react-native";
+import { View, Text, StyleSheet, Alert } from "react-native";
 import { useRouter } from "expo-router";
 import { Button } from "../../components/Button";
 import { Input } from "../../components/Input";
 import { colors } from "../../constants/colors";
 import { useState } from "react";
 import { signInWithEmailAndPassword } from "firebase/auth";
-import { auth, saveAuthState, saveAuthCredentials } from "../../services/firebase";
+import { auth, saveAuthCredentials } from "../../services/firebase";
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import { doc, getDoc } from 'firebase/firestore';
+import { db } from '../../services/firebase';
 
 export default function LoginScreen() {
   const router = useRouter();
@@ -19,11 +21,24 @@ export default function LoginScreen() {
     try {
       setLoading(true);
       setError("");
-      await signInWithEmailAndPassword(auth, email, password);
+      
+      // Faz login
+      const userCredential = await signInWithEmailAndPassword(auth, email, password);
       await saveAuthCredentials(email, password);
-      router.replace("/(tabs)/home");
+
+      // Verifica se o usuário tem perfil no Firestore
+      const userDoc = await getDoc(doc(db, "users", userCredential.user.uid));
+      const userData = userDoc.data();
+
+      // Se tem perfil vai para home, senão continua no onboarding
+      if (userData) {
+        router.replace('/(tabs)/home');
+      }
+      // Se não tem perfil, deixa o onboarding lidar com isso
+      
     } catch (error: any) {
-      setError("Email ou senha inválidos");
+      console.error('Erro ao fazer login:', error);
+      Alert.alert('Erro', 'Email ou senha inválidos');
     } finally {
       setLoading(false);
     }
@@ -62,7 +77,7 @@ export default function LoginScreen() {
       <Button
         label="Criar uma conta"
         variant="secondary"
-        onPress={() => router.push("/auth/register")}
+        onPress={() => router.push("/(auth)/register")}
       />
     </View>
   );

@@ -1,29 +1,90 @@
 rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
-    // Função auxiliar para verificar se o usuário está autenticado
+    // Funções auxiliares
     function isAuthenticated() {
       return request.auth != null;
     }
-
-    // Função para verificar se o usuário é dono do documento
+    
     function isOwner(userId) {
       return isAuthenticated() && request.auth.uid == userId;
     }
 
-    // Regras para a coleção users
+    // Regras para a coleção principal de usuários
     match /users/{userId} {
+      // Permite ler/escrever apenas nos próprios dados
       allow read, write: if isOwner(userId);
+      
+      // Programas de treino
+      match /programs/{programId} {
+        allow read, write: if isOwner(userId);
+        
+        // Treinos dentro do programa
+        match /workouts/{workoutId} {
+          allow read, write: if isOwner(userId);
+        }
+      }
+      
+      // Histórico e progresso
+      match /workoutHistory/{workoutId} {
+        allow read, write: if isOwner(userId);
+      }
+      
+      match /exerciseProgress/{exerciseId} {
+        allow read, write: if isOwner(userId);
+      }
+
+      // Nutrição
+      match /nutritionPlan/{planId} {
+        allow read, write: if isOwner(userId);
+        
+        match /mealHistory/{mealId} {
+          allow read, write: if isOwner(userId);
+        }
+      }
+
+      // Métricas e configurações
+      match /metrics/{metricId} {
+        allow read, write: if isOwner(userId);
+      }
+
+      match /settings/{settingId} {
+        allow read, write: if isOwner(userId);
+      }
     }
 
-    // Regras para a coleção nutritionPlans
+    // Coleções globais (somente leitura)
+    match /exercises/{exerciseId} {
+      allow read: if isAuthenticated();
+      allow write: if false; // Somente admin pode modificar
+    }
+
     match /nutritionPlans/{userId} {
       allow read, write: if isOwner(userId);
     }
 
-    // Regras para a coleção trainingPrograms
     match /trainingPrograms/{userId} {
       allow read, write: if isOwner(userId);
     }
+
+    // Validações específicas
+    match /users/{userId}/programs/{programId} {
+      allow write: if isOwner(userId) && 
+        request.resource.data.keys().hasAll(['workouts', 'recommendations']) &&
+        request.resource.data.workouts is list;
+    }
+
+    match /users/{userId}/exerciseProgress/{exerciseId} {
+      allow write: if isOwner(userId) && 
+        request.resource.data.keys().hasAll(['history', 'personalBest']) &&
+        request.resource.data.history is list;
+    }
+
+    // Regras para dados temporários/cache
+    match /temp/{docId} {
+      allow read, write: if isAuthenticated() && 
+        request.time < resource.data.expiresAt;
+    }
   }
+} 
 } 

@@ -7,8 +7,10 @@ import { useColors } from "../../constants/colors";
 import { useOnboarding } from "../../contexts/OnboardingContext";
 import { MaterialCommunityIcons } from "@expo/vector-icons";
 
-const CURRENT_STEP = 9;
-const TOTAL_STEPS = 14;
+const CURRENT_STEP_BEGINNER = 9;
+const CURRENT_STEP_ADVANCED = 6;
+const TOTAL_STEPS_BEGINNER = 14;
+const TOTAL_STEPS_ADVANCED = 11;
 
 const GOAL_OPTIONS = [
   {
@@ -36,6 +38,10 @@ export default function GoalScreen() {
   const { data, dispatch } = useOnboarding();
   const colors = useColors();
 
+  const isAdvancedUser = ["intermediate", "advanced"].includes(data.trainingExperience || '');
+  const currentStep = isAdvancedUser ? CURRENT_STEP_ADVANCED : CURRENT_STEP_BEGINNER;
+  const totalSteps = isAdvancedUser ? TOTAL_STEPS_ADVANCED : TOTAL_STEPS_BEGINNER;
+
   const handleSelect = (goal: typeof GOAL_OPTIONS[number]["id"]) => {
     dispatch({
       type: "SET_GOAL",
@@ -49,8 +55,8 @@ export default function GoalScreen() {
 
   return (
     <OnboardingLayout
-      currentStep={CURRENT_STEP}
-      totalSteps={TOTAL_STEPS}
+      currentStep={currentStep}
+      totalSteps={totalSteps}
       footer={
         <Button 
           label="Próximo" 

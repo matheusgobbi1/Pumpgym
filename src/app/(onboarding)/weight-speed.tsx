@@ -13,8 +13,10 @@ import { useState, useEffect } from "react";
 import { validateUserData } from "../../services/validation";
 import { MaterialCommunityIcons } from "@expo/vector-icons";
 
-const CURRENT_STEP = 11;
-const TOTAL_STEPS = 14;
+const CURRENT_STEP_BEGINNER = 11;
+const CURRENT_STEP_ADVANCED = 8;
+const TOTAL_STEPS_BEGINNER = 14;
+const TOTAL_STEPS_ADVANCED = 11;
 
 const GOAL_LABELS = {
   lose: "perder",
@@ -91,8 +93,8 @@ export default function WeightSpeedScreen() {
 
   return (
     <OnboardingLayout
-      currentStep={CURRENT_STEP}
-      totalSteps={TOTAL_STEPS}
+      currentStep={CURRENT_STEP_BEGINNER}
+      totalSteps={TOTAL_STEPS_BEGINNER}
       footer={<Button label="Próximo" onPress={handleNext} />}
     >
       <Text style={[styles.title, { color: colors.text }]}>

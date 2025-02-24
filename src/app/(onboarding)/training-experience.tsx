@@ -8,7 +8,8 @@ import { useColors } from "../../constants/colors";
 import { Button } from "../../components/Button";
 
 const CURRENT_STEP = 2;
-const TOTAL_STEPS = 14;
+const TOTAL_STEPS_BEGINNER = 14;
+const TOTAL_STEPS_ADVANCED = 11;
 
 const EXPERIENCE_OPTIONS = [
   {
@@ -41,6 +42,8 @@ export default function TrainingExperienceScreen() {
   const router = useRouter();
   const colors = useColors();
   const { data, dispatch } = useOnboarding();
+  const isAdvancedUser = ["intermediate", "advanced"].includes(data.trainingExperience || '');
+  const totalSteps = isAdvancedUser ? TOTAL_STEPS_ADVANCED : TOTAL_STEPS_BEGINNER;
 
   const handleSelect = (
     experience: (typeof EXPERIENCE_OPTIONS)[number]["value"]
@@ -52,17 +55,34 @@ export default function TrainingExperienceScreen() {
   };
 
   const handleNext = () => {
-    if (data.trainingExperience === "none") {
-      router.push("/training-time");
+    if (["intermediate", "advanced"].includes(data.trainingExperience)) {
+      dispatch({
+        type: "SET_TRAINING_STYLE",
+        payload: "other"
+      });
+      dispatch({
+        type: "SET_TRAINING_TIME",
+        payload: "60_min"
+      });
+      dispatch({
+        type: "SET_TRAINING_GOALS",
+        payload: "general_fitness"
+      });
+      
+      router.push("/training-frequency");
     } else {
-      router.push("/training-style");
+      if (data.trainingExperience === "none") {
+        router.push("/training-time");
+      } else {
+        router.push("/training-style");
+      }
     }
   };
 
   return (
     <OnboardingLayout
       currentStep={CURRENT_STEP}
-      totalSteps={TOTAL_STEPS}
+      totalSteps={totalSteps}
       showBackButton
       footer={
         <Button

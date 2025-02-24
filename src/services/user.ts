@@ -1,5 +1,5 @@
 import { db } from "./firebase";
-import { doc, setDoc } from "firebase/firestore";
+import { doc, setDoc, serverTimestamp, getDoc } from "firebase/firestore";
 import { OnboardingData } from "../contexts/OnboardingContext";
 import { validateUserData } from "./validation";
 import { createNutritionPlan } from "./nutrition";
@@ -9,41 +9,44 @@ interface UserProfile extends OnboardingData {
   updatedAt: Date;
 }
 
-export async function saveUserProfile(userId: string, data: OnboardingData) {
+export async function saveUserProfile(userId: string, data: OnboardingData): Promise<boolean> {
   try {
+    console.log("💾 Salvando perfil do usuário...");
+    
+    // Validar dados
     console.log("🔍 Validando dados do usuário...");
     const errors = validateUserData(data);
     if (errors.length > 0) {
       console.error("❌ Erros de validação:", errors);
-      throw new Error(
-        `Dados inválidos: ${errors.map((e) => e.message).join(", ")}`
-      );
+      throw new Error(`Dados inválidos: ${errors.map((e) => e.message).join(", ")}`);
     }
 
-    console.log("📝 Preparando dados para o Firestore...");
-    const userProfile = {
-      gender: data.gender,
-      birthDate: data.birthDate?.toISOString(),
-      height: data.height,
-      weight: data.weight,
-      goal: data.goal,
-      weightGoal: data.weightGoal || null,
-      weightSpeed: data.weightSpeed || null,
-      trainingFrequency: data.trainingFrequency,
-      diet: data.diet,
-      referralSource: data.referralSource,
-      createdAt: new Date().toISOString(),
-      updatedAt: new Date().toISOString(),
+    // Preparar dados
+    const profileData = {
+      ...data,
+      hasCompletedOnboarding: data.hasCompletedOnboarding || false,
+      updatedAt: serverTimestamp()
     };
 
-    console.log("📤 Dados a serem salvos:", userProfile);
-    await setDoc(doc(db, "users", userId), userProfile);
-    console.log("✅ Dados salvos com sucesso no Firestore!");
-
+    // Salvar no documento do usuário
+    const userRef = doc(db, "users", userId);
+    console.log("📤 Salvando dados:", profileData);
+    
+    // Verificar se o documento existe
+    const userDoc = await getDoc(userRef);
+    if (!userDoc.exists()) {
+      console.log("📝 Criando novo documento do usuário");
+      profileData.createdAt = serverTimestamp();
+    }
+    
+    // Salvar dados
+    await setDoc(userRef, profileData, { merge: true });
+    
+    console.log("✅ Perfil salvo com sucesso!");
     return true;
   } catch (error) {
     console.error("❌ Erro ao salvar perfil:", error);
-    throw error;
+    return false;
   }
 }
 

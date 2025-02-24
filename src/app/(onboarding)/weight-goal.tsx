@@ -9,8 +9,10 @@ import { useState } from "react";
 import { ErrorMessage } from "../../components/ErrorMessage";
 import { MaterialCommunityIcons } from "@expo/vector-icons";
 
-const TOTAL_STEPS = 14;
-const CURRENT_STEP = 10;
+const CURRENT_STEP_BEGINNER = 10;
+const CURRENT_STEP_ADVANCED = 7;
+const TOTAL_STEPS_BEGINNER = 14;
+const TOTAL_STEPS_ADVANCED = 11;
 
 export default function WeightGoalScreen() {
   const router = useRouter();
@@ -78,8 +80,8 @@ export default function WeightGoalScreen() {
 
   return (
     <OnboardingLayout
-      currentStep={CURRENT_STEP}
-      totalSteps={TOTAL_STEPS}
+      currentStep={CURRENT_STEP_BEGINNER}
+      totalSteps={TOTAL_STEPS_BEGINNER}
       footer={
         <Button
           label="Próximo"

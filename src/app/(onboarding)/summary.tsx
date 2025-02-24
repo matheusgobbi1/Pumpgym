@@ -20,9 +20,18 @@ import React from "react";
 import { MacroDistributionSelector } from "../../components/MacroDistributionSelector";
 import { saveTrainingProgram } from "../../services/training";
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import { OnboardingData } from "../../contexts/OnboardingContext";
+import { createUserTrainingProgram } from "../../services/training";
+import { FeatureItem } from "../../components/FeatureItem";
 
-const CURRENT_STEP = 14;
-const TOTAL_STEPS = 14;
+const CURRENT_STEP_BEGINNER = 14;
+const CURRENT_STEP_ADVANCED = 11;
+const TOTAL_STEPS_BEGINNER = 14;
+const TOTAL_STEPS_ADVANCED = 11;
+
+interface UserProfile extends Omit<OnboardingData, 'hasCompletedOnboarding'> {
+  hasCompletedOnboarding: boolean;
+}
 
 export default function SummaryScreen() {
   const router = useRouter();
@@ -36,16 +45,14 @@ export default function SummaryScreen() {
     null
   );
   const [goalDate, setGoalDate] = useState<Date | null>(null);
+  const isAdvancedUser = ["intermediate", "advanced"].includes(data.trainingExperience || '');
+  const currentStep = isAdvancedUser ? CURRENT_STEP_ADVANCED : CURRENT_STEP_BEGINNER;
+  const totalSteps = isAdvancedUser ? TOTAL_STEPS_ADVANCED : TOTAL_STEPS_BEGINNER;
 
   useEffect(() => {
     async function loadData() {
       try {
-        if (
-          !data.weight ||
-          !data.height ||
-          !data.gender ||
-          !data.trainingFrequency
-        ) {
+        if (!data.weight || !data.height || !data.gender || !data.trainingFrequency) {
           throw new Error("Dados incompletos");
         }
 
@@ -53,8 +60,7 @@ export default function SummaryScreen() {
         const totalSteps = 5; // Número de steps no LoadingSteps
         const stepDuration = 1500; // Duração de cada step
         const delayBetweenSteps = 200; // Delay entre steps
-        const totalDuration =
-          totalSteps * stepDuration + totalSteps * delayBetweenSteps;
+        const totalDuration = totalSteps * stepDuration + totalSteps * delayBetweenSteps;
 
         // Calculando tudo em background
         const nutrition = createNutritionPlan(data);
@@ -64,20 +70,13 @@ export default function SummaryScreen() {
         // Aguarda o tempo total dos steps
         await new Promise((resolve) => setTimeout(resolve, totalDuration));
 
-        console.log("📊 Plano nutricional calculado:", nutrition);
-        console.log("💪 Métricas de saúde calculadas:", health);
-        console.log("📅 Data prevista calculada:", predictedDate);
-
         setNutritionPlan(nutrition);
         setHealthMetrics(health);
         setGoalDate(predictedDate);
         setIsLoading(false);
       } catch (error) {
         console.error("❌ Erro ao carregar dados:", error);
-        Alert.alert(
-          "Erro",
-          "Não foi possível carregar seu plano. Tente novamente."
-        );
+        Alert.alert("Erro", "Não foi possível carregar seu plano. Tente novamente.");
         setIsLoading(false);
       }
     }
@@ -93,42 +92,34 @@ export default function SummaryScreen() {
   }, [data.macroDistribution]);
 
   const handleFinish = async () => {
+    if (!user) return;
+
     try {
-      if (user) {
-        console.log("=== INÍCIO DO SALVAMENTO ===");
-        console.log("UserID:", user.uid);
-        console.log("Dados do Onboarding:", JSON.stringify(data, null, 2));
+      setIsLoading(true);
+      
+      // 1. Salva o perfil primeiro
+      await saveUserProfile(user.uid, {
+        ...data,
+        hasCompletedOnboarding: true
+      });
 
-        console.log("Salvando perfil do usuário...");
-        await saveUserProfile(user.uid, {
-          ...data,
-          hasCompletedOnboarding: true,
-        });
-        console.log("✅ Perfil salvo com sucesso!");
+      // 2. Marca como completo no AsyncStorage
+      await AsyncStorage.setItem('hasCompletedOnboarding', 'true');
 
-        console.log("Criando plano nutricional...");
-        await createUserNutritionPlan(user.uid, data);
-        console.log("✅ Plano nutricional criado!");
-
-        console.log("Criando programa de treino...");
-        await saveTrainingProgram(user.uid, data);
-        console.log("✅ Programa de treino criado!");
-
-        // Marcar onboarding como completo
-        await AsyncStorage.setItem(`@onboarding_completed_${user.uid}`, 'true');
-
-        console.log("=== SALVAMENTO CONCLUÍDO ===");
-        
-        router.replace("/(tabs)/home");
-      } else {
-        console.error("❌ Erro: Usuário não encontrado");
+      // 3. Tenta gerar o programa de treino
+      try {
+        await createUserTrainingProgram(user.uid, data);
+      } catch (error) {
+        console.warn("Erro ao criar programa de treino, será criado depois:", error);
       }
+
+      // 4. Redireciona para home mesmo se der erro no programa
+      router.replace('/(tabs)/home');
     } catch (error) {
-      console.error("❌ Erro durante o salvamento:", error);
-      Alert.alert(
-        "Erro",
-        "Não foi possível salvar seus dados. Tente novamente."
-      );
+      console.error(error);
+      Alert.alert('Erro', 'Não foi possível salvar seu perfil');
+    } finally {
+      setIsLoading(false);
     }
   };
 
@@ -138,9 +129,10 @@ export default function SummaryScreen() {
 
   return (
     <OnboardingLayout
-      currentStep={CURRENT_STEP}
-      totalSteps={TOTAL_STEPS}
+      currentStep={currentStep}
+      totalSteps={totalSteps}
       footer={<Button label="Começar Jornada" onPress={handleFinish} />}
+      showBackButton
     >
       <ScrollView showsVerticalScrollIndicator={false}>
         <Text style={styles.title}>Seu Plano{"\n"}Personalizado</Text>
@@ -534,5 +526,8 @@ const styles = StyleSheet.create({
     fontSize: 14,
     color: colors.textSecondary,
     marginTop: 8,
+  },
+  features: {
+    gap: 16,
   },
 });

@@ -7,8 +7,10 @@ import { useColors } from "../../constants/colors";
 import { useOnboarding } from "../../contexts/OnboardingContext";
 import { MaterialCommunityIcons } from "@expo/vector-icons";
 
-const CURRENT_STEP = 6;
-const TOTAL_STEPS = 14;
+const CURRENT_STEP_BEGINNER = 6;
+const CURRENT_STEP_ADVANCED = 3;
+const TOTAL_STEPS_BEGINNER = 14;
+const TOTAL_STEPS_ADVANCED = 11;
 
 const TRAINING_OPTIONS = [
   {
@@ -47,6 +49,10 @@ export default function TrainingFrequencyScreen() {
   const router = useRouter();
   const { data, dispatch } = useOnboarding();
   const colors = useColors();
+  const isAdvancedUser = ["intermediate", "advanced"].includes(data.trainingExperience || '');
+  
+  const currentStep = isAdvancedUser ? CURRENT_STEP_ADVANCED : CURRENT_STEP_BEGINNER;
+  const totalSteps = isAdvancedUser ? TOTAL_STEPS_ADVANCED : TOTAL_STEPS_BEGINNER;
 
   const handleSelect = (
     frequency: (typeof TRAINING_OPTIONS)[number]["value"]
@@ -58,13 +64,17 @@ export default function TrainingFrequencyScreen() {
   };
 
   const handleNext = () => {
-    router.push("/training-days");
+    if (isAdvancedUser) {
+      router.push("/birth-date");
+    } else {
+      router.push("/training-days");
+    }
   };
 
   return (
     <OnboardingLayout
-      currentStep={CURRENT_STEP}
-      totalSteps={TOTAL_STEPS}
+      currentStep={currentStep}
+      totalSteps={totalSteps}
       footer={
         <Button
           label="Próximo"

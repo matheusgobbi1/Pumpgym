@@ -7,12 +7,13 @@ export const colors = {
   text: '#FFFFFF', // Ícones ativos em branco
   textSecondary: '#757575', // Ícones inativos em cinza
   error: '#DC2626',
-  success: '#16A34A',
-  warning: '#CA8A04',
+  success: '#10B981',
+  warning: '#F59E0B',
   border: '#E5E5E5',
   buttonBackground: "#F5F5F5",
   buttonText: "#FFFFFF",
-  buttonDisabled: "#E0E0E0",
+  buttonDisabled: "#9CA3AF",
+  white: "#FFFFFF", // Adicionado para resolver o erro do linter
 } as const;
 
 // Definindo o tipo das cores para o TypeScript
